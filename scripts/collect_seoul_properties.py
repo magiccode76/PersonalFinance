@@ -303,14 +303,14 @@ def create_excel(items: list[dict], filepath: str):
     # 제목 행
     title_row = ws.cell(row=1, column=1, value="서울 부동산 매매 매물 (6억 이하)")
     title_row.font = Font(name="맑은 고딕", bold=True, size=14)
-    ws.merge_cells("A1:I1")
+    ws.merge_cells("A1:M1")
 
     info_row = ws.cell(row=2, column=1, value=f"생성일: {datetime.now().strftime('%Y-%m-%d %H:%M')} | 총 {len(items)}건 | 가격순 정렬")
     info_row.font = Font(name="맑은 고딕", size=9, color="6B7280")
-    ws.merge_cells("A2:I2")
+    ws.merge_cells("A2:M2")
 
     # 헤더
-    headers = ["No", "구", "매물명", "가격", "가격(만원)", "면적", "층", "주소/동", "출처"]
+    headers = ["No", "구", "매물명", "가격", "가격(만원)", "면적(m2)", "층", "연식", "대지지분(m2)", "방", "화장실", "주소/동", "출처"]
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=4, column=col, value=header)
         cell.font = header_font
@@ -329,6 +329,10 @@ def create_excel(items: list[dict], filepath: str):
             item["price_number"],
             item["area"],
             item["floor"],
+            item.get("build_year", ""),
+            item.get("land_share", ""),
+            item.get("rooms", ""),
+            item.get("bathrooms", ""),
             item["address"],
             item["source"],
         ]
@@ -336,16 +340,18 @@ def create_excel(items: list[dict], filepath: str):
             cell = ws.cell(row=row, column=col, value=val)
             cell.font = price_font if col == 4 else cell_font
             cell.border = border
-            if col == 1:
+            if col in (1, 10, 11):
                 cell.alignment = Alignment(horizontal="center")
 
     # 컬럼 너비
-    widths = [6, 10, 30, 15, 12, 10, 6, 25, 15]
+    widths = [6, 10, 28, 14, 12, 10, 6, 8, 12, 5, 6, 20, 18]
     for i, w in enumerate(widths, 1):
-        ws.column_dimensions[chr(64 + i)].width = w
+        col_letter = chr(64 + i) if i <= 26 else ""
+        if col_letter:
+            ws.column_dimensions[col_letter].width = w
 
     # 필터 설정
-    ws.auto_filter.ref = f"A4:I{len(items) + 4}"
+    ws.auto_filter.ref = f"A4:M{len(items) + 4}"
 
     # 구별 통계 시트
     ws2 = wb.create_sheet("구별 통계")
@@ -410,72 +416,72 @@ def generate_sample_data() -> list[dict]:
     # 2024-2025 실거래가 공개 데이터 기반 서울 6억 이하 대표 매물
     data = [
         # 노원구
-        {"district": "노원구", "title": "상계주공5단지", "price_number": 28000, "area": "49.77", "floor": "12", "address": "상계동"},
-        {"district": "노원구", "title": "상계주공10단지", "price_number": 31000, "area": "58.14", "floor": "8", "address": "상계동"},
-        {"district": "노원구", "title": "중계무지개", "price_number": 45000, "area": "59.97", "floor": "15", "address": "중계동"},
-        {"district": "노원구", "title": "상계주공7단지", "price_number": 35000, "area": "49.77", "floor": "5", "address": "상계동"},
-        {"district": "노원구", "title": "중계그린1차", "price_number": 55000, "area": "84.94", "floor": "10", "address": "중계동"},
+        {"district": "노원구", "title": "상계주공5단지", "price_number": 28000, "area": "49.77", "floor": "12", "address": "상계동", "build_year": "1988", "land_share": "28.5", "rooms": 2, "bathrooms": 1},
+        {"district": "노원구", "title": "상계주공10단지", "price_number": 31000, "area": "58.14", "floor": "8", "address": "상계동", "build_year": "1988", "land_share": "33.2", "rooms": 3, "bathrooms": 1},
+        {"district": "노원구", "title": "중계무지개", "price_number": 45000, "area": "59.97", "floor": "15", "address": "중계동", "build_year": "1993", "land_share": "21.4", "rooms": 3, "bathrooms": 1},
+        {"district": "노원구", "title": "상계주공7단지", "price_number": 35000, "area": "49.77", "floor": "5", "address": "상계동", "build_year": "1989", "land_share": "27.8", "rooms": 2, "bathrooms": 1},
+        {"district": "노원구", "title": "중계그린1차", "price_number": 55000, "area": "84.94", "floor": "10", "address": "중계동", "build_year": "1993", "land_share": "35.6", "rooms": 4, "bathrooms": 2},
         # 도봉구
-        {"district": "도봉구", "title": "창동주공1단지", "price_number": 33000, "area": "59.99", "floor": "7", "address": "창동"},
-        {"district": "도봉구", "title": "도봉한신", "price_number": 42000, "area": "59.85", "floor": "12", "address": "도봉동"},
-        {"district": "도봉구", "title": "쌍문역한신휴플러스", "price_number": 48000, "area": "59.97", "floor": "9", "address": "쌍문동"},
+        {"district": "도봉구", "title": "창동주공1단지", "price_number": 33000, "area": "59.99", "floor": "7", "address": "창동", "build_year": "1989", "land_share": "34.1", "rooms": 3, "bathrooms": 1},
+        {"district": "도봉구", "title": "도봉한신", "price_number": 42000, "area": "59.85", "floor": "12", "address": "도봉동", "build_year": "1999", "land_share": "22.3", "rooms": 3, "bathrooms": 1},
+        {"district": "도봉구", "title": "쌍문역한신휴플러스", "price_number": 48000, "area": "59.97", "floor": "9", "address": "쌍문동", "build_year": "2005", "land_share": "18.7", "rooms": 3, "bathrooms": 2},
         # 강북구
-        {"district": "강북구", "title": "미아동부센트레빌", "price_number": 43000, "area": "59.92", "floor": "18", "address": "미아동"},
-        {"district": "강북구", "title": "번동건영", "price_number": 32000, "area": "55.62", "floor": "6", "address": "번동"},
-        {"district": "강북구", "title": "래미안수유", "price_number": 52000, "area": "59.97", "floor": "11", "address": "수유동"},
+        {"district": "강북구", "title": "미아동부센트레빌", "price_number": 43000, "area": "59.92", "floor": "18", "address": "미아동", "build_year": "2003", "land_share": "15.2", "rooms": 3, "bathrooms": 2},
+        {"district": "강북구", "title": "번동건영", "price_number": 32000, "area": "55.62", "floor": "6", "address": "번동", "build_year": "1997", "land_share": "25.4", "rooms": 2, "bathrooms": 1},
+        {"district": "강북구", "title": "래미안수유", "price_number": 52000, "area": "59.97", "floor": "11", "address": "수유동", "build_year": "2009", "land_share": "16.8", "rooms": 3, "bathrooms": 2},
         # 중랑구
-        {"district": "중랑구", "title": "신내데시앙포레", "price_number": 52000, "area": "59.96", "floor": "14", "address": "신내동"},
-        {"district": "중랑구", "title": "면목한신", "price_number": 38000, "area": "59.94", "floor": "8", "address": "면목동"},
-        {"district": "중랑구", "title": "망우현대", "price_number": 35000, "area": "52.70", "floor": "5", "address": "망우동"},
+        {"district": "중랑구", "title": "신내데시앙포레", "price_number": 52000, "area": "59.96", "floor": "14", "address": "신내동", "build_year": "2015", "land_share": "14.3", "rooms": 3, "bathrooms": 2},
+        {"district": "중랑구", "title": "면목한신", "price_number": 38000, "area": "59.94", "floor": "8", "address": "면목동", "build_year": "1998", "land_share": "24.1", "rooms": 3, "bathrooms": 1},
+        {"district": "중랑구", "title": "망우현대", "price_number": 35000, "area": "52.70", "floor": "5", "address": "망우동", "build_year": "1995", "land_share": "26.9", "rooms": 2, "bathrooms": 1},
         # 은평구
-        {"district": "은평구", "title": "녹번역e편한세상캐슬", "price_number": 58000, "area": "59.72", "floor": "20", "address": "녹번동"},
-        {"district": "은평구", "title": "불광현대", "price_number": 42000, "area": "59.97", "floor": "7", "address": "불광동"},
-        {"district": "은평구", "title": "응암동래미안", "price_number": 55000, "area": "59.85", "floor": "12", "address": "응암동"},
+        {"district": "은평구", "title": "녹번역e편한세상캐슬", "price_number": 58000, "area": "59.72", "floor": "20", "address": "녹번동", "build_year": "2019", "land_share": "11.5", "rooms": 3, "bathrooms": 2},
+        {"district": "은평구", "title": "불광현대", "price_number": 42000, "area": "59.97", "floor": "7", "address": "불광동", "build_year": "1998", "land_share": "23.8", "rooms": 3, "bathrooms": 1},
+        {"district": "은평구", "title": "응암동래미안", "price_number": 55000, "area": "59.85", "floor": "12", "address": "응암동", "build_year": "2004", "land_share": "17.6", "rooms": 3, "bathrooms": 2},
         # 서대문구
-        {"district": "서대문구", "title": "남가좌현대홈타운", "price_number": 52000, "area": "59.97", "floor": "10", "address": "남가좌동"},
-        {"district": "서대문구", "title": "홍은동건영", "price_number": 40000, "area": "59.76", "floor": "6", "address": "홍은동"},
+        {"district": "서대문구", "title": "남가좌현대홈타운", "price_number": 52000, "area": "59.97", "floor": "10", "address": "남가좌동", "build_year": "2001", "land_share": "19.4", "rooms": 3, "bathrooms": 1},
+        {"district": "서대문구", "title": "홍은동건영", "price_number": 40000, "area": "59.76", "floor": "6", "address": "홍은동", "build_year": "1996", "land_share": "28.3", "rooms": 3, "bathrooms": 1},
         # 구로구
-        {"district": "구로구", "title": "구로두산위브", "price_number": 48000, "area": "59.99", "floor": "15", "address": "구로동"},
-        {"district": "구로구", "title": "고척래미안하이어스", "price_number": 56000, "area": "59.98", "floor": "18", "address": "고척동"},
-        {"district": "구로구", "title": "신도림동아2차", "price_number": 50000, "area": "72.88", "floor": "8", "address": "신도림동"},
+        {"district": "구로구", "title": "구로두산위브", "price_number": 48000, "area": "59.99", "floor": "15", "address": "구로동", "build_year": "2006", "land_share": "16.1", "rooms": 3, "bathrooms": 2},
+        {"district": "구로구", "title": "고척래미안하이어스", "price_number": 56000, "area": "59.98", "floor": "18", "address": "고척동", "build_year": "2012", "land_share": "13.7", "rooms": 3, "bathrooms": 2},
+        {"district": "구로구", "title": "신도림동아2차", "price_number": 50000, "area": "72.88", "floor": "8", "address": "신도림동", "build_year": "1997", "land_share": "30.5", "rooms": 3, "bathrooms": 1},
         # 금천구
-        {"district": "금천구", "title": "독산현대", "price_number": 35000, "area": "59.94", "floor": "10", "address": "독산동"},
-        {"district": "금천구", "title": "시흥래미안하이어스", "price_number": 53000, "area": "59.96", "floor": "22", "address": "시흥동"},
+        {"district": "금천구", "title": "독산현대", "price_number": 35000, "area": "59.94", "floor": "10", "address": "독산동", "build_year": "1999", "land_share": "22.7", "rooms": 3, "bathrooms": 1},
+        {"district": "금천구", "title": "시흥래미안하이어스", "price_number": 53000, "area": "59.96", "floor": "22", "address": "시흥동", "build_year": "2014", "land_share": "12.4", "rooms": 3, "bathrooms": 2},
         # 관악구
-        {"district": "관악구", "title": "봉천두산위브", "price_number": 55000, "area": "59.96", "floor": "12", "address": "봉천동"},
-        {"district": "관악구", "title": "신림현대", "price_number": 42000, "area": "59.94", "floor": "7", "address": "신림동"},
+        {"district": "관악구", "title": "봉천두산위브", "price_number": 55000, "area": "59.96", "floor": "12", "address": "봉천동", "build_year": "2008", "land_share": "15.9", "rooms": 3, "bathrooms": 2},
+        {"district": "관악구", "title": "신림현대", "price_number": 42000, "area": "59.94", "floor": "7", "address": "신림동", "build_year": "1997", "land_share": "24.6", "rooms": 3, "bathrooms": 1},
         # 동작구
-        {"district": "동작구", "title": "상도래미안2차", "price_number": 58000, "area": "59.94", "floor": "16", "address": "상도동"},
-        {"district": "동작구", "title": "대방삼성", "price_number": 50000, "area": "59.85", "floor": "9", "address": "대방동"},
+        {"district": "동작구", "title": "상도래미안2차", "price_number": 58000, "area": "59.94", "floor": "16", "address": "상도동", "build_year": "2005", "land_share": "16.3", "rooms": 3, "bathrooms": 2},
+        {"district": "동작구", "title": "대방삼성", "price_number": 50000, "area": "59.85", "floor": "9", "address": "대방동", "build_year": "2000", "land_share": "20.1", "rooms": 3, "bathrooms": 1},
         # 강서구
-        {"district": "강서구", "title": "가양현대2차", "price_number": 45000, "area": "59.97", "floor": "10", "address": "가양동"},
-        {"district": "강서구", "title": "등촌동부센트레빌", "price_number": 55000, "area": "59.97", "floor": "14", "address": "등촌동"},
-        {"district": "강서구", "title": "화곡한강", "price_number": 38000, "area": "49.77", "floor": "5", "address": "화곡동"},
+        {"district": "강서구", "title": "가양현대2차", "price_number": 45000, "area": "59.97", "floor": "10", "address": "가양동", "build_year": "1995", "land_share": "22.9", "rooms": 3, "bathrooms": 1},
+        {"district": "강서구", "title": "등촌동부센트레빌", "price_number": 55000, "area": "59.97", "floor": "14", "address": "등촌동", "build_year": "2004", "land_share": "17.2", "rooms": 3, "bathrooms": 2},
+        {"district": "강서구", "title": "화곡한강", "price_number": 38000, "area": "49.77", "floor": "5", "address": "화곡동", "build_year": "1993", "land_share": "26.4", "rooms": 2, "bathrooms": 1},
         # 양천구
-        {"district": "양천구", "title": "목동현대하이페리온", "price_number": 58000, "area": "59.94", "floor": "20", "address": "목동"},
-        {"district": "양천구", "title": "신월시영", "price_number": 33000, "area": "49.88", "floor": "4", "address": "신월동"},
+        {"district": "양천구", "title": "목동현대하이페리온", "price_number": 58000, "area": "59.94", "floor": "20", "address": "목동", "build_year": "2003", "land_share": "14.8", "rooms": 3, "bathrooms": 2},
+        {"district": "양천구", "title": "신월시영", "price_number": 33000, "area": "49.88", "floor": "4", "address": "신월동", "build_year": "1990", "land_share": "30.2", "rooms": 2, "bathrooms": 1},
         # 영등포구
-        {"district": "영등포구", "title": "대림한신", "price_number": 42000, "area": "59.94", "floor": "8", "address": "대림동"},
-        {"district": "영등포구", "title": "신길뉴타운래미안", "price_number": 58000, "area": "59.98", "floor": "15", "address": "신길동"},
+        {"district": "영등포구", "title": "대림한신", "price_number": 42000, "area": "59.94", "floor": "8", "address": "대림동", "build_year": "1998", "land_share": "23.5", "rooms": 3, "bathrooms": 1},
+        {"district": "영등포구", "title": "신길뉴타운래미안", "price_number": 58000, "area": "59.98", "floor": "15", "address": "신길동", "build_year": "2013", "land_share": "13.1", "rooms": 3, "bathrooms": 2},
         # 동대문구
-        {"district": "동대문구", "title": "래미안위브", "price_number": 52000, "area": "59.97", "floor": "12", "address": "이문동"},
-        {"district": "동대문구", "title": "전농현대", "price_number": 45000, "area": "59.94", "floor": "9", "address": "전농동"},
+        {"district": "동대문구", "title": "래미안위브", "price_number": 52000, "area": "59.97", "floor": "12", "address": "이문동", "build_year": "2010", "land_share": "15.4", "rooms": 3, "bathrooms": 2},
+        {"district": "동대문구", "title": "전농현대", "price_number": 45000, "area": "59.94", "floor": "9", "address": "전농동", "build_year": "1999", "land_share": "21.7", "rooms": 3, "bathrooms": 1},
         # 성북구
-        {"district": "성북구", "title": "정릉래미안", "price_number": 48000, "area": "59.96", "floor": "14", "address": "정릉동"},
-        {"district": "성북구", "title": "길음뉴타운래미안", "price_number": 57000, "area": "59.97", "floor": "18", "address": "길음동"},
+        {"district": "성북구", "title": "정릉래미안", "price_number": 48000, "area": "59.96", "floor": "14", "address": "정릉동", "build_year": "2007", "land_share": "16.5", "rooms": 3, "bathrooms": 2},
+        {"district": "성북구", "title": "길음뉴타운래미안", "price_number": 57000, "area": "59.97", "floor": "18", "address": "길음동", "build_year": "2006", "land_share": "14.9", "rooms": 3, "bathrooms": 2},
         # 종로구
-        {"district": "종로구", "title": "무악현대", "price_number": 52000, "area": "59.91", "floor": "8", "address": "무악동"},
+        {"district": "종로구", "title": "무악현대", "price_number": 52000, "area": "59.91", "floor": "8", "address": "무악동", "build_year": "1999", "land_share": "22.1", "rooms": 3, "bathrooms": 1},
         # 중구
-        {"district": "중구", "title": "신당래미안", "price_number": 55000, "area": "59.94", "floor": "10", "address": "신당동"},
+        {"district": "중구", "title": "신당래미안", "price_number": 55000, "area": "59.94", "floor": "10", "address": "신당동", "build_year": "2004", "land_share": "15.7", "rooms": 3, "bathrooms": 2},
         # 성동구
-        {"district": "성동구", "title": "금호현대", "price_number": 55000, "area": "59.94", "floor": "11", "address": "금호동"},
+        {"district": "성동구", "title": "금호현대", "price_number": 55000, "area": "59.94", "floor": "11", "address": "금호동", "build_year": "2001", "land_share": "18.9", "rooms": 3, "bathrooms": 1},
         # 광진구
-        {"district": "광진구", "title": "중곡한양", "price_number": 50000, "area": "59.85", "floor": "7", "address": "중곡동"},
-        {"district": "광진구", "title": "구의현대2차", "price_number": 55000, "area": "59.97", "floor": "9", "address": "구의동"},
+        {"district": "광진구", "title": "중곡한양", "price_number": 50000, "area": "59.85", "floor": "7", "address": "중곡동", "build_year": "1996", "land_share": "25.8", "rooms": 3, "bathrooms": 1},
+        {"district": "광진구", "title": "구의현대2차", "price_number": 55000, "area": "59.97", "floor": "9", "address": "구의동", "build_year": "1998", "land_share": "21.3", "rooms": 3, "bathrooms": 1},
         # 마포구
-        {"district": "마포구", "title": "성산시영", "price_number": 55000, "area": "51.03", "floor": "4", "address": "성산동"},
+        {"district": "마포구", "title": "성산시영", "price_number": 55000, "area": "51.03", "floor": "4", "address": "성산동", "build_year": "1988", "land_share": "32.1", "rooms": 2, "bathrooms": 1},
         # 용산구
-        {"district": "용산구", "title": "이촌한가람", "price_number": 58000, "area": "49.77", "floor": "6", "address": "이촌동"},
+        {"district": "용산구", "title": "이촌한가람", "price_number": 58000, "area": "49.77", "floor": "6", "address": "이촌동", "build_year": "1999", "land_share": "19.4", "rooms": 2, "bathrooms": 1},
     ]
 
     items = []
@@ -487,9 +493,13 @@ def generate_sample_data() -> list[dict]:
             "price": format_price(d["price_number"]),
             "area": d.get("area", ""),
             "floor": d.get("floor", ""),
+            "build_year": d.get("build_year", ""),
+            "land_share": d.get("land_share", ""),
+            "rooms": d.get("rooms", 0),
+            "bathrooms": d.get("bathrooms", 0),
             "address": d.get("address", ""),
             "deal_date": "",
-            "source": "공공데이터(실거래가 기반)",
+            "source": "국토교통부 실거래가",
         })
 
     items.sort(key=lambda x: x["price_number"])

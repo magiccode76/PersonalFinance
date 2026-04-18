@@ -73,8 +73,8 @@ async def export_properties(
     if not items:
         raise HTTPException(status_code=404, detail="내보낼 데이터가 없습니다")
 
-    headers = ["제목", "유형", "거래", "가격", "면적(m2)", "층", "주소", "지역", "출처"]
-    keys = ["title", "property_type", "trade_type", "price", "area", "floor", "address", "region", "source"]
+    headers = ["제목", "유형", "거래", "가격", "면적(m2)", "층", "연식", "대지지분(m2)", "방", "화장실", "주소", "지역", "출처"]
+    keys = ["title", "property_type", "trade_type", "price", "area", "floor", "build_year", "land_share", "rooms", "bathrooms", "address", "region", "source"]
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 

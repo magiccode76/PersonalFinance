@@ -74,7 +74,8 @@ export default function PropertyListScreen() {
       </View>
       <View style={styles.cardBody}>
         <Text style={styles.price}>{item.price}</Text>
-        <Text style={styles.detail}>{item.area}m2 | {item.floor} | {item.region} | {item.source}</Text>
+        <Text style={styles.detail}>{item.area}m2 | {item.floor}층 | {item.build_year || ""}년 | 방{item.rooms} 화{item.bathrooms}</Text>
+        <Text style={styles.detail}>{item.region} | {item.source}</Text>
       </View>
     </View>
   );

@@ -7,6 +7,10 @@ export interface Property {
   price_number: number;
   area: number;
   floor: string;
+  build_year: string;
+  land_share: string;
+  rooms: number;
+  bathrooms: number;
   address: string;
   region: string;
   description: string;
