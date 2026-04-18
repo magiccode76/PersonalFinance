@@ -9,7 +9,7 @@ const DEFAULT_PARAMS: SearchParams = {
   sigungu: "강남구",
   property_type: "아파트",
   trade_type: "매매",
-  sources: "naver,dabang,r114",
+  sources: "naver,dabang,r114,kakao,bdmap",
   sort_by: "price_number",
   sort_order: "asc",
   page: 1,

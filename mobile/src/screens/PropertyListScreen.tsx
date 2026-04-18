@@ -49,7 +49,7 @@ export default function PropertyListScreen() {
         sigungu,
         property_type: "아파트",
         trade_type: tradeType,
-        sources: "naver,dabang,r114",
+        sources: "naver,dabang,r114,kakao,bdmap",
         sort_by: "price_number",
         sort_order: sortOrder,
         page: 1,

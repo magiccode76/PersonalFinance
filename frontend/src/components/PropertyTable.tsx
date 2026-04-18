@@ -24,6 +24,8 @@ const SOURCE_COLORS: Record<string, string> = {
   "네이버부동산": "bg-green-100 text-green-700",
   "다방": "bg-blue-100 text-blue-700",
   "부동산114": "bg-orange-100 text-orange-700",
+  "카카오맵": "bg-yellow-100 text-yellow-700",
+  "부동산빅데이터": "bg-purple-100 text-purple-700",
 };
 
 export default function PropertyTable({ items, sortBy, sortOrder, onSortChange }: Props) {

@@ -9,6 +9,8 @@ const SOURCE_DOT_COLORS: Record<string, string> = {
   "네이버부동산": "bg-green-500",
   "다방": "bg-blue-500",
   "부동산114": "bg-orange-500",
+  "카카오맵": "bg-yellow-500",
+  "부동산빅데이터": "bg-purple-500",
 };
 
 export default function RealEstatePage() {

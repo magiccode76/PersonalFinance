@@ -15,6 +15,8 @@ const SOURCE_OPTIONS = [
   { key: "naver", label: "네이버부동산", color: "bg-green-500" },
   { key: "dabang", label: "다방", color: "bg-blue-500" },
   { key: "r114", label: "부동산114", color: "bg-orange-500" },
+  { key: "kakao", label: "카카오맵", color: "bg-yellow-500" },
+  { key: "bdmap", label: "부동산빅데이터", color: "bg-purple-500" },
 ];
 
 interface Props {

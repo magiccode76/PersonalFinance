@@ -455,6 +455,339 @@ class R114Scraper:
 
 
 # ==============================================================================
+# 카카오맵 부동산
+# ==============================================================================
+class KakaoMapScraper:
+    """카카오맵 부동산 매물 검색 크롤러"""
+
+    SOURCE_NAME = "카카오맵"
+
+    # 카카오맵 부동산 API
+    SEARCH_URL = "https://search.map.kakao.com/mapsearch/map.daum"
+    REALTY_URL = "https://realty.daum.net/api/home/price/complex"
+    SEARCH_API = "https://realty.daum.net/api/search"
+
+    HEADERS = {
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "ko-KR,ko;q=0.9",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "Referer": "https://realty.daum.net/",
+        "Origin": "https://realty.daum.net",
+    }
+
+    MAX_RETRIES = 2
+    RETRY_DELAY = 2.0
+
+    # 주요 지역 좌표
+    REGION_COORDS = {
+        "강남구": {"lat": 37.5172, "lng": 127.0473},
+        "서초구": {"lat": 37.4837, "lng": 127.0324},
+        "송파구": {"lat": 37.5145, "lng": 127.1059},
+        "마포구": {"lat": 37.5663, "lng": 126.9014},
+        "용산구": {"lat": 37.5326, "lng": 126.9900},
+        "성동구": {"lat": 37.5634, "lng": 127.0369},
+        "영등포구": {"lat": 37.5264, "lng": 126.8963},
+        "노원구": {"lat": 37.6542, "lng": 127.0568},
+        "해운대구": {"lat": 35.1631, "lng": 129.1636},
+        "수원시": {"lat": 37.2636, "lng": 127.0286},
+        "분당구": {"lat": 37.3825, "lng": 127.1188},
+        "중구": {"lat": 37.5640, "lng": 126.9975},
+    }
+
+    TRADE_TYPE_MAP = {
+        "매매": "SALE", "전세": "LEASE", "월세": "MONTH_RENT",
+    }
+
+    def _get_coords(self, sigungu: str) -> dict:
+        for key, coords in self.REGION_COORDS.items():
+            if key in sigungu:
+                return coords
+        return {"lat": 37.5665, "lng": 126.9780}
+
+    async def search_properties(
+        self, sido: str = "서울특별시", sigungu: str = "강남구",
+        property_type: str = "아파트", trade_type: str = "매매", page: int = 1,
+    ) -> ScrapeResult:
+        region_display = f"{sido} {sigungu}"
+        result = ScrapeResult(source_url="https://realty.daum.net", source_name=self.SOURCE_NAME)
+
+        for attempt in range(self.MAX_RETRIES + 1):
+            try:
+                async with httpx.AsyncClient() as client:
+                    # 방법1: 다음 부동산 검색 API
+                    search_keyword = f"{sigungu} {property_type}"
+                    trade_code = self.TRADE_TYPE_MAP.get(trade_type, "SALE")
+
+                    response = await client.get(
+                        "https://realty.daum.net/api/search/keyword",
+                        params={"keyword": search_keyword},
+                        headers=self.HEADERS,
+                        timeout=15.0,
+                    )
+                    result.status_code = response.status_code
+
+                    if response.status_code == 200:
+                        try:
+                            data = response.json()
+                            complexes = data.get("complexes", data.get("list", data.get("data", [])))
+                            if isinstance(complexes, dict):
+                                complexes = complexes.get("list", complexes.get("items", []))
+
+                            for item in complexes if complexes else []:
+                                price_str = item.get("price", item.get("dealPrice", item.get("priceText", "0")))
+                                name = item.get("name", item.get("complexName", item.get("title", "")))
+                                complex_id = item.get("id", item.get("complexId", ""))
+
+                                result.items.append(PropertyCreate(
+                                    title=name,
+                                    property_type=property_type, trade_type=trade_type,
+                                    price=str(price_str),
+                                    price_number=_parse_price_to_number(str(price_str)),
+                                    area=float(item.get("area", item.get("exclusiveArea", 0))),
+                                    floor=str(item.get("floor", item.get("totalFloor", ""))),
+                                    address=item.get("address", item.get("roadAddress", "")),
+                                    region=region_display,
+                                    description=item.get("description", ""),
+                                    source="카카오맵",
+                                    source_url=f"https://realty.daum.net/complex/{complex_id}" if complex_id else "https://realty.daum.net",
+                                    image_url=item.get("imageUrl", item.get("thumbnail", "")),
+                                ))
+                        except Exception:
+                            pass
+
+                    # API 결과 없으면 웹 스크래핑 시도
+                    if not result.items:
+                        await self._scrape_web(result, sigungu, property_type, trade_type, region_display, client)
+
+                    if result.items:
+                        result.success = True
+                    else:
+                        result.success = True
+                        result.error_message = "카카오맵에서 해당 조건의 매물을 찾지 못했습니다."
+                    return result
+
+            except (httpx.TimeoutException, httpx.ConnectError):
+                result.error_message = "카카오맵 서버에 연결할 수 없습니다."
+                if attempt < self.MAX_RETRIES:
+                    await asyncio.sleep(self.RETRY_DELAY)
+                    continue
+            except Exception as e:
+                result.error_message = f"카카오맵 크롤링 오류: {str(e)}"
+                return result
+
+        return result
+
+    async def _scrape_web(self, result: ScrapeResult, sigungu: str,
+                          property_type: str, trade_type: str,
+                          region_display: str, client: httpx.AsyncClient):
+        """다음 부동산 웹 스크래핑 fallback"""
+        try:
+            search_url = f"https://search.daum.net/search?w=real&q={sigungu}+{property_type}+{trade_type}"
+            response = await client.get(
+                search_url,
+                headers={
+                    "User-Agent": self.HEADERS["User-Agent"],
+                    "Referer": "https://www.daum.net/",
+                },
+                timeout=15.0, follow_redirects=True,
+            )
+
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, "lxml")
+                items = soup.select(".wrap_tit, .item_realty, .cont_item, .complex_item")
+
+                for item in items:
+                    title_el = item.select_one(".tit_item, .name, .tit_complex, .txt_name, a")
+                    price_el = item.select_one(".price, .txt_price, .cost")
+                    addr_el = item.select_one(".addr, .txt_addr, .address")
+
+                    if title_el:
+                        title_text = title_el.get_text(strip=True)
+                        price_text = price_el.get_text(strip=True) if price_el else ""
+                        result.items.append(PropertyCreate(
+                            title=title_text,
+                            property_type=property_type, trade_type=trade_type,
+                            price=price_text,
+                            price_number=_parse_price_to_number(price_text),
+                            area=0, floor="",
+                            address=addr_el.get_text(strip=True) if addr_el else "",
+                            region=region_display,
+                            description="",
+                            source="카카오맵",
+                            source_url="https://realty.daum.net",
+                            image_url="",
+                        ))
+        except Exception:
+            pass
+
+
+# ==============================================================================
+# 부동산빅데이터 (한국부동산원)
+# ==============================================================================
+class BdmapScraper:
+    """부동산빅데이터(bdmap.kab.co.kr) 시세/거래 정보 크롤러"""
+
+    SOURCE_NAME = "부동산빅데이터"
+
+    # 한국부동산원 빅데이터 API
+    BASE_URL = "https://bdmap.kab.co.kr/api"
+
+    HEADERS = {
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "ko-KR,ko;q=0.9",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "Referer": "https://bdmap.kab.co.kr/",
+        "Origin": "https://bdmap.kab.co.kr",
+    }
+
+    MAX_RETRIES = 2
+    RETRY_DELAY = 2.0
+
+    # 시도 코드 매핑 (한국부동산원 코드체계)
+    SIDO_CODE_MAP = {
+        "서울특별시": "11", "부산광역시": "26", "대구광역시": "27",
+        "인천광역시": "28", "광주광역시": "29", "대전광역시": "30",
+        "울산광역시": "31", "세종특별자치시": "36", "경기도": "41",
+        "강원특별자치도": "51", "충청북도": "43", "충청남도": "44",
+        "전북특별자치도": "52", "전라남도": "46", "경상북도": "47",
+        "경상남도": "48", "제주특별자치도": "50",
+    }
+
+    TRADE_TYPE_MAP = {
+        "매매": "deal", "전세": "lease", "월세": "rent",
+    }
+
+    async def search_properties(
+        self, sido: str = "서울특별시", sigungu: str = "강남구",
+        property_type: str = "아파트", trade_type: str = "매매", page: int = 1,
+    ) -> ScrapeResult:
+        region_display = f"{sido} {sigungu}"
+        sido_code = self.SIDO_CODE_MAP.get(sido, "11")
+        result = ScrapeResult(source_url="https://bdmap.kab.co.kr", source_name=self.SOURCE_NAME)
+
+        for attempt in range(self.MAX_RETRIES + 1):
+            try:
+                async with httpx.AsyncClient() as client:
+                    # 방법1: 한국부동산원 시세 API
+                    response = await client.get(
+                        f"{self.BASE_URL}/svc/price/aptPrice",
+                        params={
+                            "sidoCd": sido_code,
+                            "keyword": sigungu,
+                            "tradeType": self.TRADE_TYPE_MAP.get(trade_type, "deal"),
+                            "page": page,
+                            "pageSize": 20,
+                        },
+                        headers=self.HEADERS,
+                        timeout=15.0,
+                    )
+                    result.status_code = response.status_code
+
+                    if response.status_code == 200:
+                        try:
+                            data = response.json()
+                            items = data.get("list", data.get("data", data.get("result", data.get("items", []))))
+                            if isinstance(items, dict):
+                                items = items.get("list", items.get("items", []))
+
+                            for item in items if items else []:
+                                price_str = item.get("price", item.get("avgPrice", item.get("dealPrice", "0")))
+                                name = item.get("aptName", item.get("complexName", item.get("name", "")))
+
+                                result.items.append(PropertyCreate(
+                                    title=name,
+                                    property_type=property_type, trade_type=trade_type,
+                                    price=str(price_str),
+                                    price_number=_parse_price_to_number(str(price_str)),
+                                    area=float(item.get("area", item.get("exclusiveArea", 0))),
+                                    floor=str(item.get("floor", "")),
+                                    address=item.get("address", item.get("addr", item.get("roadAddr", ""))),
+                                    region=region_display,
+                                    description=item.get("description", ""),
+                                    source="부동산빅데이터",
+                                    source_url="https://bdmap.kab.co.kr",
+                                    image_url="",
+                                ))
+                        except Exception:
+                            pass
+
+                    # API 결과 없으면 웹 스크래핑 시도
+                    if not result.items:
+                        await self._scrape_web(result, sido, sigungu, property_type, trade_type, region_display, client)
+
+                    if result.items:
+                        result.success = True
+                    else:
+                        result.success = True
+                        result.error_message = "부동산빅데이터에서 해당 조건의 매물을 찾지 못했습니다."
+                    return result
+
+            except (httpx.TimeoutException, httpx.ConnectError):
+                result.error_message = "부동산빅데이터 서버에 연결할 수 없습니다."
+                if attempt < self.MAX_RETRIES:
+                    await asyncio.sleep(self.RETRY_DELAY)
+                    continue
+            except Exception as e:
+                result.error_message = f"부동산빅데이터 크롤링 오류: {str(e)}"
+                return result
+
+        return result
+
+    async def _scrape_web(self, result: ScrapeResult, sido: str, sigungu: str,
+                          property_type: str, trade_type: str,
+                          region_display: str, client: httpx.AsyncClient):
+        """부동산빅데이터 웹 스크래핑 + 한국부동산원 보조 API"""
+        try:
+            # 한국부동산원 통계 API (공개)
+            response = await client.get(
+                "https://www.reb.or.kr/reb/cms/mneng/statisticsSearch.do",
+                params={
+                    "searchType": "apt",
+                    "keyword": f"{sigungu}",
+                    "sidoCd": self.SIDO_CODE_MAP.get(sido, "11"),
+                },
+                headers={
+                    "User-Agent": self.HEADERS["User-Agent"],
+                    "Referer": "https://www.reb.or.kr/",
+                },
+                timeout=15.0, follow_redirects=True,
+            )
+
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, "lxml")
+                rows = soup.select("table tbody tr, .data_row, .list_item")
+
+                for row in rows:
+                    cols = row.select("td")
+                    if len(cols) >= 3:
+                        name = cols[0].get_text(strip=True)
+                        price_text = cols[1].get_text(strip=True) if len(cols) > 1 else ""
+                        area_text = cols[2].get_text(strip=True) if len(cols) > 2 else ""
+
+                        if name and len(name) > 1:
+                            area_val = 0.0
+                            area_match = re.search(r"[\d.]+", area_text)
+                            if area_match:
+                                area_val = float(area_match.group())
+
+                            result.items.append(PropertyCreate(
+                                title=name,
+                                property_type=property_type, trade_type=trade_type,
+                                price=price_text,
+                                price_number=_parse_price_to_number(price_text),
+                                area=area_val, floor="",
+                                address="",
+                                region=region_display,
+                                description="한국부동산원 시세",
+                                source="부동산빅데이터",
+                                source_url="https://bdmap.kab.co.kr",
+                                image_url="",
+                            ))
+        except Exception:
+            pass
+
+
+# ==============================================================================
 # 네이버 웹 검색 (기존)
 # ==============================================================================
 class WebScraper:
@@ -509,6 +842,8 @@ class IntegratedScraper:
         self.naver = NaverRealEstateScraper()
         self.dabang = DabangScraper()
         self.r114 = R114Scraper()
+        self.kakao = KakaoMapScraper()
+        self.bdmap = BdmapScraper()
 
     async def search_all(
         self, sido: str, sigungu: str,
@@ -517,7 +852,7 @@ class IntegratedScraper:
     ) -> dict:
         """선택된 소스에서 병렬 검색"""
         if sources is None:
-            sources = ["naver", "dabang", "r114"]
+            sources = ["naver", "dabang", "r114", "kakao", "bdmap"]
 
         tasks = []
         source_names = []
@@ -531,6 +866,12 @@ class IntegratedScraper:
         if "r114" in sources:
             tasks.append(self.r114.search_properties(sido, sigungu, property_type, trade_type, page))
             source_names.append("부동산114")
+        if "kakao" in sources:
+            tasks.append(self.kakao.search_properties(sido, sigungu, property_type, trade_type, page))
+            source_names.append("카카오맵")
+        if "bdmap" in sources:
+            tasks.append(self.bdmap.search_properties(sido, sigungu, property_type, trade_type, page))
+            source_names.append("부동산빅데이터")
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -567,5 +908,7 @@ class IntegratedScraper:
 scraper = NaverRealEstateScraper()
 dabang_scraper = DabangScraper()
 r114_scraper = R114Scraper()
+kakao_scraper = KakaoMapScraper()
+bdmap_scraper = BdmapScraper()
 web_scraper = WebScraper()
 integrated_scraper = IntegratedScraper()
