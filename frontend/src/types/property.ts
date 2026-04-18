@@ -22,16 +22,24 @@ export interface SearchParams {
   sigungu: string;
   property_type: string;
   trade_type: string;
+  sources: string;
   sort_by: string;
   sort_order: string;
   page: number;
 }
 
-export interface SearchResponse {
+export interface SourceResult {
+  source_name: string;
   success: boolean;
   status_code: number;
   error_message: string;
-  source_url: string;
+  total: number;
+}
+
+export interface SearchResponse {
+  success: boolean;
+  source_results: SourceResult[];
+  error_message: string;
   total: number;
   page: number;
   sort_by: string;

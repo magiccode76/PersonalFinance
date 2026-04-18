@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { Property, SearchParams } from "@/types/property";
+import type { Property, SearchParams, SourceResult } from "@/types/property";
 import { searchProperties, saveProperties } from "@/lib/api";
 
 const DEFAULT_PARAMS: SearchParams = {
@@ -9,23 +9,10 @@ const DEFAULT_PARAMS: SearchParams = {
   sigungu: "강남구",
   property_type: "아파트",
   trade_type: "매매",
+  sources: "naver,dabang,r114",
   sort_by: "price_number",
   sort_order: "asc",
   page: 1,
-};
-
-export interface ApiStatus {
-  success: boolean;
-  statusCode: number;
-  errorMessage: string;
-  sourceUrl: string;
-}
-
-const INITIAL_STATUS: ApiStatus = {
-  success: true,
-  statusCode: 0,
-  errorMessage: "",
-  sourceUrl: "",
 };
 
 export function useProperties() {
@@ -34,24 +21,19 @@ export function useProperties() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [apiStatus, setApiStatus] = useState<ApiStatus>(INITIAL_STATUS);
+  const [sourceResults, setSourceResults] = useState<SourceResult[]>([]);
 
   const search = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setApiStatus(INITIAL_STATUS);
+    setSourceResults([]);
     try {
       const data = await searchProperties(params);
       setItems(data.items);
       setTotal(data.total);
-      setApiStatus({
-        success: data.success,
-        statusCode: data.status_code,
-        errorMessage: data.error_message,
-        sourceUrl: data.source_url,
-      });
-      if (!data.success) {
-        setError(data.error_message || "크롤링에 실패했습니다.");
+      setSourceResults(data.source_results || []);
+      if (!data.success && data.error_message) {
+        setError(data.error_message);
       }
     } catch (err: unknown) {
       const message =
@@ -59,12 +41,6 @@ export function useProperties() {
           ? "서버에 연결할 수 없습니다. 서버 상태를 확인해주세요."
           : "검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
       setError(message);
-      setApiStatus({
-        success: false,
-        statusCode: 0,
-        errorMessage: message,
-        sourceUrl: "",
-      });
     } finally {
       setLoading(false);
     }
@@ -88,5 +64,5 @@ export function useProperties() {
     }));
   }, []);
 
-  return { params, setParams, items, total, loading, error, apiStatus, search, save, toggleSort };
+  return { params, setParams, items, total, loading, error, sourceResults, search, save, toggleSort };
 }

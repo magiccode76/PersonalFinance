@@ -27,6 +27,7 @@ export interface SearchParams {
   sigungu: string;
   property_type: string;
   trade_type: string;
+  sources: string;
   sort_by: string;
   sort_order: string;
   page: number;

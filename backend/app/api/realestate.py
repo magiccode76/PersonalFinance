@@ -11,7 +11,7 @@ from app.models.property import (
     PropertyResponse,
     PropertySearchParams,
 )
-from app.services.scraper import scraper, web_scraper
+from app.services.scraper import scraper, dabang_scraper, r114_scraper, web_scraper, integrated_scraper
 from datetime import datetime
 from bson import ObjectId
 
@@ -42,44 +42,52 @@ async def list_all_regions():
     return result
 
 
-@router.get("/search", summary="부동산 매물 검색 (크롤링)")
+@router.get("/search", summary="부동산 매물 통합 검색 (크롤링)")
 async def search_properties(
     sido: str = Query("서울특별시", description="시/도"),
     sigungu: str = Query("강남구", description="시/군/구"),
     property_type: str = Query("아파트", description="매물유형"),
     trade_type: str = Query("매매", description="거래유형"),
+    sources: str = Query("naver,dabang,r114", description="출처 (naver,dabang,r114 쉼표구분)"),
     sort_by: str = Query("price_number", description="정렬 기준"),
     sort_order: str = Query("asc", description="정렬 순서 (asc/desc)"),
     page: int = Query(1, ge=1),
 ):
-    """네이버 부동산에서 매물을 검색하고 정렬하여 반환. 성공/실패 상태 포함."""
-    result = await scraper.search_properties(
-        sido=sido,
-        sigungu=sigungu,
-        property_type=property_type,
-        trade_type=trade_type,
-        page=page,
+    """네이버부동산, 다방, 부동산114에서 매물을 통합 검색. 출처별 성공/실패 상태 포함."""
+    source_list = [s.strip() for s in sources.split(",") if s.strip()]
+
+    data = await integrated_scraper.search_all(
+        sido=sido, sigungu=sigungu,
+        property_type=property_type, trade_type=trade_type,
+        sources=source_list, page=page,
     )
 
-    if result.success and result.items:
+    items = data["all_items"]
+    # 정렬
+    if items:
         reverse = sort_order == "desc"
         if sort_by == "price_number":
-            result.items.sort(key=lambda x: x.price_number, reverse=reverse)
+            items.sort(key=lambda x: x.price_number, reverse=reverse)
         elif sort_by == "area":
-            result.items.sort(key=lambda x: x.area, reverse=reverse)
+            items.sort(key=lambda x: x.area, reverse=reverse)
         elif sort_by == "title":
-            result.items.sort(key=lambda x: x.title, reverse=reverse)
+            items.sort(key=lambda x: x.title, reverse=reverse)
+
+    any_success = any(r["success"] for r in data["source_results"])
+    error_messages = [
+        f"[{r['source_name']}] {r['error_message']}"
+        for r in data["source_results"] if not r["success"] and r["error_message"]
+    ]
 
     return {
-        "success": result.success,
-        "status_code": result.status_code,
-        "error_message": result.error_message,
-        "source_url": result.source_url,
-        "total": len(result.items),
+        "success": any_success,
+        "source_results": data["source_results"],
+        "error_message": " | ".join(error_messages) if error_messages else "",
+        "total": len(items),
         "page": page,
         "sort_by": sort_by,
         "sort_order": sort_order,
-        "items": [p.model_dump() for p in result.items],
+        "items": [p.model_dump() for p in items],
     }
 
 

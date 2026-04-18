@@ -49,6 +49,7 @@ export default function PropertyListScreen() {
         sigungu,
         property_type: "아파트",
         trade_type: tradeType,
+        sources: "naver,dabang,r114",
         sort_by: "price_number",
         sort_order: sortOrder,
         page: 1,
@@ -73,7 +74,7 @@ export default function PropertyListScreen() {
       </View>
       <View style={styles.cardBody}>
         <Text style={styles.price}>{item.price}</Text>
-        <Text style={styles.detail}>{item.area}m2 | {item.floor} | {item.region}</Text>
+        <Text style={styles.detail}>{item.area}m2 | {item.floor} | {item.region} | {item.source}</Text>
       </View>
     </View>
   );

@@ -17,7 +17,14 @@ const COLUMNS = [
   { key: "area", label: "면적(m2)", sortable: true },
   { key: "floor", label: "층", sortable: false },
   { key: "region", label: "지역", sortable: true },
+  { key: "source", label: "출처", sortable: false },
 ];
+
+const SOURCE_COLORS: Record<string, string> = {
+  "네이버부동산": "bg-green-100 text-green-700",
+  "다방": "bg-blue-100 text-blue-700",
+  "부동산114": "bg-orange-100 text-orange-700",
+};
 
 export default function PropertyTable({ items, sortBy, sortOrder, onSortChange }: Props) {
   if (items.length === 0) {
@@ -76,13 +83,16 @@ export default function PropertyTable({ items, sortBy, sortOrder, onSortChange }
                 <td className="px-4 py-3 text-gray-600">{item.floor}</td>
                 <td className="px-4 py-3 text-gray-600">{item.region}</td>
                 <td className="px-4 py-3">
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                    SOURCE_COLORS[item.source] || "bg-gray-100 text-gray-700"
+                  }`}>
+                    {item.source}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
                   {item.source_url && (
-                    <a
-                      href={item.source_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:underline text-xs"
-                    >
+                    <a href={item.source_url} target="_blank" rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline text-xs">
                       보기
                     </a>
                   )}
