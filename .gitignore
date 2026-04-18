@@ -25,3 +25,6 @@ Thumbs.db
 
 # Docker
 mongodb_data/
+
+# Generated files
+*.xlsx

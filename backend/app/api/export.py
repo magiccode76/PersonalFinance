@@ -52,7 +52,7 @@ async def export_properties(
 ):
     """저장된 매물 데이터를 정렬 순서대로 CSV 또는 Excel 파일로 다운로드"""
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="DB 연결 실패")
 
     query = {}

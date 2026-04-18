@@ -95,7 +95,7 @@ async def search_properties(
 async def save_properties(properties: list[PropertyCreate]):
     """크롤링한 매물 데이터를 MongoDB에 저장"""
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="DB 연결 실패")
 
     now = datetime.now()
@@ -115,6 +115,7 @@ async def list_properties(
     region: str = Query(None),
     property_type: str = Query(None),
     trade_type: str = Query(None),
+    source: str = Query(None, description="출처 필터"),
     min_price: int = Query(None, description="최소 가격 (만원)"),
     max_price: int = Query(None, description="최대 가격 (만원)"),
     sort_by: str = Query("price_number", description="정렬 기준"),
@@ -124,12 +125,14 @@ async def list_properties(
 ):
     """DB에 저장된 매물 목록을 필터/정렬하여 반환"""
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="DB 연결 실패")
 
     query = {}
     if region:
-        query["region"] = region
+        query["region"] = {"$regex": region}
+    if source:
+        query["source"] = {"$regex": source}
     if property_type:
         query["property_type"] = property_type
     if trade_type:
@@ -181,7 +184,7 @@ async def web_search(keyword: str = Query(..., description="검색 키워드")):
 async def delete_property(property_id: str):
     """저장된 매물 삭제"""
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="DB 연결 실패")
 
     result = await db.properties.delete_one({"_id": ObjectId(property_id)})

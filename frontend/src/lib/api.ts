@@ -15,7 +15,14 @@ export async function fetchAllRegions(): Promise<Record<string, string[]>> {
   return data;
 }
 
-export async function listProperties(params: Partial<SearchParams> & {
+export async function listProperties(params: {
+  region?: string;
+  property_type?: string;
+  trade_type?: string;
+  source?: string;
+  sort_by?: string;
+  sort_order?: string;
+  page?: number;
   page_size?: number;
   min_price?: number;
   max_price?: number;
