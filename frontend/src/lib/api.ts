@@ -26,6 +26,11 @@ export async function listProperties(params: {
   page_size?: number;
   min_price?: number;
   max_price?: number;
+  min_area?: number;
+  max_area?: number;
+  min_year?: string;
+  max_year?: string;
+  min_rooms?: number;
 }): Promise<ListResponse> {
   const { data } = await api.get("/api/realestate/list", { params });
   return data;

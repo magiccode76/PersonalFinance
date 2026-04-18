@@ -112,12 +112,17 @@ async def save_properties(properties: list[PropertyCreate]):
 
 @router.get("/list", summary="저장된 매물 목록 조회")
 async def list_properties(
-    region: str = Query(None),
+    region: str = Query(None, description="지역 검색 (시/도 또는 구/시)"),
     property_type: str = Query(None),
     trade_type: str = Query(None),
     source: str = Query(None, description="출처 필터"),
     min_price: int = Query(None, description="최소 가격 (만원)"),
     max_price: int = Query(None, description="최대 가격 (만원)"),
+    min_area: float = Query(None, description="최소 면적 (m2)"),
+    max_area: float = Query(None, description="최대 면적 (m2)"),
+    min_year: str = Query(None, description="최소 연식 (예: 2000)"),
+    max_year: str = Query(None, description="최대 연식 (예: 2020)"),
+    min_rooms: int = Query(None, description="최소 방 수"),
     sort_by: str = Query("price_number", description="정렬 기준"),
     sort_order: str = Query("asc", description="정렬 순서"),
     page: int = Query(1, ge=1),
@@ -144,6 +149,22 @@ async def list_properties(
         if max_price is not None:
             price_q["$lte"] = max_price
         query["price_number"] = price_q
+    if min_area is not None or max_area is not None:
+        area_q = {}
+        if min_area is not None:
+            area_q["$gte"] = min_area
+        if max_area is not None:
+            area_q["$lte"] = max_area
+        query["area"] = area_q
+    if min_year is not None or max_year is not None:
+        year_q = {}
+        if min_year is not None:
+            year_q["$gte"] = min_year
+        if max_year is not None:
+            year_q["$lte"] = max_year
+        query["build_year"] = year_q
+    if min_rooms is not None:
+        query["rooms"] = {"$gte": min_rooms}
 
     sort_dir = 1 if sort_order == "asc" else -1
     skip = (page - 1) * page_size
