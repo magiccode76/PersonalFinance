@@ -229,6 +229,7 @@ export default function SavedProperties() {
               <option value="area">면적순</option>
               <option value="build_year">연식순</option>
               <option value="rooms">방 수순</option>
+              <option value="deal_date">거래일순</option>
               <option value="region">지역순</option>
               <option value="title">이름순</option>
             </select>

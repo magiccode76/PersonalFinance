@@ -33,7 +33,7 @@ def import_excel(filepath: str):
     for row in ws.iter_rows(min_row=5, values_only=True):
         if not row[0]:
             continue
-        # 헤더: No, 시/도, 구/시, 매물명, 가격, 가격(만원), 면적, 층, 연식, 대지지분, 방, 화장실, 주소/동, 출처
+        # 헤더: No, 시/도, 구/시, 매물명, 가격, 가격(만원), 면적, 층, 연식, 대지지분, 방, 화장실, 최근거래일, 주소/동, 출처
         sido = str(row[1] or "서울특별시")
         sigungu = str(row[2] or "")
         items.append({
@@ -48,10 +48,11 @@ def import_excel(filepath: str):
             "land_share": str(row[9] or "") if len(row) > 9 else "",
             "rooms": int(row[10] or 0) if len(row) > 10 else 0,
             "bathrooms": int(row[11] or 0) if len(row) > 11 else 0,
-            "address": str(row[12] or "") if len(row) > 12 else "",
+            "deal_date": str(row[12] or "") if len(row) > 12 else "",
+            "address": str(row[13] or "") if len(row) > 13 else "",
             "region": f"{sido} {sigungu}",
             "description": "",
-            "source": str(row[13] or "국토교통부 실거래가") if len(row) > 13 else "국토교통부 실거래가",
+            "source": str(row[14] or "국토교통부 실거래가") if len(row) > 14 else "국토교통부 실거래가",
             "source_url": "https://rt.molit.go.kr",
             "image_url": "",
             "created_at": datetime.now(),

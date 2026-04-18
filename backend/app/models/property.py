@@ -15,6 +15,7 @@ class PropertyBase(BaseModel):
     land_share: str = Field("", description="대지지분 (m2)")
     rooms: int = Field(0, description="방 개수")
     bathrooms: int = Field(0, description="화장실 개수")
+    deal_date: str = Field("", description="최근 거래일자 (예: 2025-03-15)")
     address: str = Field("", description="주소")
     region: str = Field("", description="지역 (시/구)")
     description: str = Field("", description="상세 설명")

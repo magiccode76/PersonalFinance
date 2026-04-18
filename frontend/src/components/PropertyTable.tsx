@@ -20,6 +20,7 @@ const COLUMNS = [
   { key: "land_share", label: "대지지분", sortable: false },
   { key: "rooms", label: "방", sortable: true },
   { key: "bathrooms", label: "화장실", sortable: true },
+  { key: "deal_date", label: "최근거래일", sortable: true },
   { key: "region", label: "지역", sortable: true },
   { key: "source", label: "출처", sortable: false },
 ];
@@ -93,6 +94,7 @@ export default function PropertyTable({ items, sortBy, sortOrder, onSortChange }
                 <td className="px-4 py-3 text-gray-600">{item.land_share}</td>
                 <td className="px-4 py-3 text-gray-600 text-center">{item.rooms || ""}</td>
                 <td className="px-4 py-3 text-gray-600 text-center">{item.bathrooms || ""}</td>
+                <td className="px-4 py-3 text-gray-600 text-sm">{item.deal_date || ""}</td>
                 <td className="px-4 py-3 text-gray-600">{item.region}</td>
                 <td className="px-4 py-3">
                   <span className={`px-2 py-0.5 rounded text-xs font-medium ${

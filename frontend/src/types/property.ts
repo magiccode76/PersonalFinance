@@ -11,6 +11,7 @@ export interface Property {
   land_share: string;
   rooms: number;
   bathrooms: number;
+  deal_date: string;
   address: string;
   region: string;
   description: string;

@@ -219,11 +219,11 @@ def create_excel(items: list[dict], filepath: str):
     gg_count = len([i for i in items if i["sido"] == "경기도"])
 
     ws.cell(row=1, column=1, value="서울/경기 부동산 매매 매물 (6억 이하)").font = Font(name="맑은 고딕", bold=True, size=14)
-    ws.merge_cells("A1:N1")
+    ws.merge_cells("A1:O1")
     ws.cell(row=2, column=1, value=f"생성일: {datetime.now().strftime('%Y-%m-%d %H:%M')} | 총 {len(items)}건 (서울 {seoul_count} / 경기 {gg_count}) | 가격순").font = Font(name="맑은 고딕", size=9, color="6B7280")
-    ws.merge_cells("A2:N2")
+    ws.merge_cells("A2:O2")
 
-    headers = ["No", "시/도", "구/시", "매물명", "가격", "가격(만원)", "면적(m2)", "층", "연식", "대지지분(m2)", "방", "화장실", "주소/동", "출처"]
+    headers = ["No", "시/도", "구/시", "매물명", "가격", "가격(만원)", "면적(m2)", "층", "연식", "대지지분(m2)", "방", "화장실", "최근거래일", "주소/동", "출처"]
     for col, h in enumerate(headers, 1):
         cell = ws.cell(row=4, column=col, value=h)
         cell.font = header_font
@@ -235,7 +235,8 @@ def create_excel(items: list[dict], filepath: str):
         row = idx + 4
         vals = [idx, item["sido"], item["district"], item["title"], item["price"], item["price_number"],
                 item["area"], item["floor"], item.get("build_year", ""), item.get("land_share", ""),
-                item.get("rooms", ""), item.get("bathrooms", ""), item["address"], item["source"]]
+                item.get("rooms", ""), item.get("bathrooms", ""), item.get("deal_date", ""),
+                item["address"], item["source"]]
         for col, val in enumerate(vals, 1):
             cell = ws.cell(row=row, column=col, value=val)
             cell.font = price_font if col == 5 else cell_font
@@ -243,11 +244,11 @@ def create_excel(items: list[dict], filepath: str):
             if col in (1, 11, 12):
                 cell.alignment = Alignment(horizontal="center")
 
-    widths = [5, 10, 12, 26, 13, 11, 9, 5, 7, 10, 4, 5, 18, 16]
+    widths = [5, 10, 12, 26, 13, 11, 9, 5, 7, 10, 4, 5, 12, 18, 16]
     for i, w in enumerate(widths, 1):
         ws.column_dimensions[chr(64 + i)].width = w
 
-    ws.auto_filter.ref = f"A4:N{len(items) + 4}"
+    ws.auto_filter.ref = f"A4:O{len(items) + 4}"
 
     # 구별 통계 시트
     ws2 = wb.create_sheet("지역별 통계")
@@ -290,133 +291,133 @@ def generate_sample_data() -> list[dict]:
     data = [
         # ===== 서울특별시 =====
         # 노원구
-        {"sido": "서울특별시", "district": "노원구", "title": "상계주공5단지", "price_number": 28000, "area": "49.77", "floor": "12", "address": "상계동", "build_year": "1988", "land_share": "28.5", "rooms": 2, "bathrooms": 1},
-        {"sido": "서울특별시", "district": "노원구", "title": "상계주공10단지", "price_number": 31000, "area": "58.14", "floor": "8", "address": "상계동", "build_year": "1988", "land_share": "33.2", "rooms": 3, "bathrooms": 1},
-        {"sido": "서울특별시", "district": "노원구", "title": "중계무지개", "price_number": 45000, "area": "59.97", "floor": "15", "address": "중계동", "build_year": "1993", "land_share": "21.4", "rooms": 3, "bathrooms": 1},
-        {"sido": "서울특별시", "district": "노원구", "title": "상계주공7단지", "price_number": 35000, "area": "49.77", "floor": "5", "address": "상계동", "build_year": "1989", "land_share": "27.8", "rooms": 2, "bathrooms": 1},
-        {"sido": "서울특별시", "district": "노원구", "title": "중계그린1차", "price_number": 55000, "area": "84.94", "floor": "10", "address": "중계동", "build_year": "1993", "land_share": "35.6", "rooms": 4, "bathrooms": 2},
+        {"sido": "서울특별시", "district": "노원구", "title": "상계주공5단지", "price_number": 28000, "area": "49.77", "floor": "12", "address": "상계동", "build_year": "1988", "land_share": "28.5", "rooms": 2, "bathrooms": 1, "deal_date": "2026-04-18"},
+        {"sido": "서울특별시", "district": "노원구", "title": "상계주공10단지", "price_number": 31000, "area": "58.14", "floor": "8", "address": "상계동", "build_year": "1988", "land_share": "33.2", "rooms": 3, "bathrooms": 1, "deal_date": "2025-03-25"},
+        {"sido": "서울특별시", "district": "노원구", "title": "중계무지개", "price_number": 45000, "area": "59.97", "floor": "15", "address": "중계동", "build_year": "1993", "land_share": "21.4", "rooms": 3, "bathrooms": 1, "deal_date": "2025-01-20"},
+        {"sido": "서울특별시", "district": "노원구", "title": "상계주공7단지", "price_number": 35000, "area": "49.77", "floor": "5", "address": "상계동", "build_year": "1989", "land_share": "27.8", "rooms": 2, "bathrooms": 1, "deal_date": "2025-08-05"},
+        {"sido": "서울특별시", "district": "노원구", "title": "중계그린1차", "price_number": 55000, "area": "84.94", "floor": "10", "address": "중계동", "build_year": "1993", "land_share": "35.6", "rooms": 4, "bathrooms": 2, "deal_date": "2025-07-10"},
         # 도봉구
-        {"sido": "서울특별시", "district": "도봉구", "title": "창동주공1단지", "price_number": 33000, "area": "59.99", "floor": "7", "address": "창동", "build_year": "1989", "land_share": "34.1", "rooms": 3, "bathrooms": 1},
-        {"sido": "서울특별시", "district": "도봉구", "title": "도봉한신", "price_number": 42000, "area": "59.85", "floor": "12", "address": "도봉동", "build_year": "1999", "land_share": "22.3", "rooms": 3, "bathrooms": 1},
-        {"sido": "서울특별시", "district": "도봉구", "title": "쌍문역한신휴플러스", "price_number": 48000, "area": "59.97", "floor": "9", "address": "쌍문동", "build_year": "2005", "land_share": "18.7", "rooms": 3, "bathrooms": 2},
+        {"sido": "서울특별시", "district": "도봉구", "title": "창동주공1단지", "price_number": 33000, "area": "59.99", "floor": "7", "address": "창동", "build_year": "1989", "land_share": "34.1", "rooms": 3, "bathrooms": 1, "deal_date": "2025-06-20"},
+        {"sido": "서울특별시", "district": "도봉구", "title": "도봉한신", "price_number": 42000, "area": "59.85", "floor": "12", "address": "도봉동", "build_year": "1999", "land_share": "22.3", "rooms": 3, "bathrooms": 1, "deal_date": "2025-04-15"},
+        {"sido": "서울특별시", "district": "도봉구", "title": "쌍문역한신휴플러스", "price_number": 48000, "area": "59.97", "floor": "9", "address": "쌍문동", "build_year": "2005", "land_share": "18.7", "rooms": 3, "bathrooms": 2, "deal_date": "2025-03-20"},
         # 강북구
-        {"sido": "서울특별시", "district": "강북구", "title": "미아동부센트레빌", "price_number": 43000, "area": "59.92", "floor": "18", "address": "미아동", "build_year": "2003", "land_share": "15.2", "rooms": 3, "bathrooms": 2},
-        {"sido": "서울특별시", "district": "강북구", "title": "번동건영", "price_number": 32000, "area": "55.62", "floor": "6", "address": "번동", "build_year": "1997", "land_share": "25.4", "rooms": 2, "bathrooms": 1},
+        {"sido": "서울특별시", "district": "강북구", "title": "미아동부센트레빌", "price_number": 43000, "area": "59.92", "floor": "18", "address": "미아동", "build_year": "2003", "land_share": "15.2", "rooms": 3, "bathrooms": 2, "deal_date": "2026-02-18"},
+        {"sido": "서울특별시", "district": "강북구", "title": "번동건영", "price_number": 32000, "area": "55.62", "floor": "6", "address": "번동", "build_year": "1997", "land_share": "25.4", "rooms": 2, "bathrooms": 1, "deal_date": "2025-03-10"},
         # 중랑구
-        {"sido": "서울특별시", "district": "중랑구", "title": "신내데시앙포레", "price_number": 52000, "area": "59.96", "floor": "14", "address": "신내동", "build_year": "2015", "land_share": "14.3", "rooms": 3, "bathrooms": 2},
-        {"sido": "서울특별시", "district": "중랑구", "title": "면목한신", "price_number": 38000, "area": "59.94", "floor": "8", "address": "면목동", "build_year": "1998", "land_share": "24.1", "rooms": 3, "bathrooms": 1},
-        {"sido": "서울특별시", "district": "중랑구", "title": "망우현대", "price_number": 35000, "area": "52.70", "floor": "5", "address": "망우동", "build_year": "1995", "land_share": "26.9", "rooms": 2, "bathrooms": 1},
+        {"sido": "서울특별시", "district": "중랑구", "title": "신내데시앙포레", "price_number": 52000, "area": "59.96", "floor": "14", "address": "신내동", "build_year": "2015", "land_share": "14.3", "rooms": 3, "bathrooms": 2, "deal_date": "2026-03-18"},
+        {"sido": "서울특별시", "district": "중랑구", "title": "면목한신", "price_number": 38000, "area": "59.94", "floor": "8", "address": "면목동", "build_year": "1998", "land_share": "24.1", "rooms": 3, "bathrooms": 1, "deal_date": "2025-11-25"},
+        {"sido": "서울특별시", "district": "중랑구", "title": "망우현대", "price_number": 35000, "area": "52.70", "floor": "5", "address": "망우동", "build_year": "1995", "land_share": "26.9", "rooms": 2, "bathrooms": 1, "deal_date": "2025-01-25"},
         # 은평구
-        {"sido": "서울특별시", "district": "은평구", "title": "녹번역e편한세상캐슬", "price_number": 58000, "area": "59.72", "floor": "20", "address": "녹번동", "build_year": "2019", "land_share": "11.5", "rooms": 3, "bathrooms": 2},
-        {"sido": "서울특별시", "district": "은평구", "title": "불광현대", "price_number": 42000, "area": "59.97", "floor": "7", "address": "불광동", "build_year": "1998", "land_share": "23.8", "rooms": 3, "bathrooms": 1},
+        {"sido": "서울특별시", "district": "은평구", "title": "녹번역e편한세상캐슬", "price_number": 58000, "area": "59.72", "floor": "20", "address": "녹번동", "build_year": "2019", "land_share": "11.5", "rooms": 3, "bathrooms": 2, "deal_date": "2025-01-20"},
+        {"sido": "서울특별시", "district": "은평구", "title": "불광현대", "price_number": 42000, "area": "59.97", "floor": "7", "address": "불광동", "build_year": "1998", "land_share": "23.8", "rooms": 3, "bathrooms": 1, "deal_date": "2025-03-10"},
         # 서대문구
-        {"sido": "서울특별시", "district": "서대문구", "title": "남가좌현대홈타운", "price_number": 52000, "area": "59.97", "floor": "10", "address": "남가좌동", "build_year": "2001", "land_share": "19.4", "rooms": 3, "bathrooms": 1},
-        {"sido": "서울특별시", "district": "서대문구", "title": "홍은동건영", "price_number": 40000, "area": "59.76", "floor": "6", "address": "홍은동", "build_year": "1996", "land_share": "28.3", "rooms": 3, "bathrooms": 1},
+        {"sido": "서울특별시", "district": "서대문구", "title": "남가좌현대홈타운", "price_number": 52000, "area": "59.97", "floor": "10", "address": "남가좌동", "build_year": "2001", "land_share": "19.4", "rooms": 3, "bathrooms": 1, "deal_date": "2025-06-15"},
+        {"sido": "서울특별시", "district": "서대문구", "title": "홍은동건영", "price_number": 40000, "area": "59.76", "floor": "6", "address": "홍은동", "build_year": "1996", "land_share": "28.3", "rooms": 3, "bathrooms": 1, "deal_date": "2025-06-25"},
         # 구로구
-        {"sido": "서울특별시", "district": "구로구", "title": "구로두산위브", "price_number": 48000, "area": "59.99", "floor": "15", "address": "구로동", "build_year": "2006", "land_share": "16.1", "rooms": 3, "bathrooms": 2},
-        {"sido": "서울특별시", "district": "구로구", "title": "고척래미안하이어스", "price_number": 56000, "area": "59.98", "floor": "18", "address": "고척동", "build_year": "2012", "land_share": "13.7", "rooms": 3, "bathrooms": 2},
+        {"sido": "서울특별시", "district": "구로구", "title": "구로두산위브", "price_number": 48000, "area": "59.99", "floor": "15", "address": "구로동", "build_year": "2006", "land_share": "16.1", "rooms": 3, "bathrooms": 2, "deal_date": "2026-01-22"},
+        {"sido": "서울특별시", "district": "구로구", "title": "고척래미안하이어스", "price_number": 56000, "area": "59.98", "floor": "18", "address": "고척동", "build_year": "2012", "land_share": "13.7", "rooms": 3, "bathrooms": 2, "deal_date": "2026-03-28"},
         # 금천구
-        {"sido": "서울특별시", "district": "금천구", "title": "독산현대", "price_number": 35000, "area": "59.94", "floor": "10", "address": "독산동", "build_year": "1999", "land_share": "22.7", "rooms": 3, "bathrooms": 1},
-        {"sido": "서울특별시", "district": "금천구", "title": "시흥래미안하이어스", "price_number": 53000, "area": "59.96", "floor": "22", "address": "시흥동", "build_year": "2014", "land_share": "12.4", "rooms": 3, "bathrooms": 2},
+        {"sido": "서울특별시", "district": "금천구", "title": "독산현대", "price_number": 35000, "area": "59.94", "floor": "10", "address": "독산동", "build_year": "1999", "land_share": "22.7", "rooms": 3, "bathrooms": 1, "deal_date": "2025-01-20"},
+        {"sido": "서울특별시", "district": "금천구", "title": "시흥래미안하이어스", "price_number": 53000, "area": "59.96", "floor": "22", "address": "시흥동", "build_year": "2014", "land_share": "12.4", "rooms": 3, "bathrooms": 2, "deal_date": "2026-02-28"},
         # 관악구
-        {"sido": "서울특별시", "district": "관악구", "title": "봉천두산위브", "price_number": 55000, "area": "59.96", "floor": "12", "address": "봉천동", "build_year": "2008", "land_share": "15.9", "rooms": 3, "bathrooms": 2},
-        {"sido": "서울특별시", "district": "관악구", "title": "신림현대", "price_number": 42000, "area": "59.94", "floor": "7", "address": "신림동", "build_year": "1997", "land_share": "24.6", "rooms": 3, "bathrooms": 1},
+        {"sido": "서울특별시", "district": "관악구", "title": "봉천두산위브", "price_number": 55000, "area": "59.96", "floor": "12", "address": "봉천동", "build_year": "2008", "land_share": "15.9", "rooms": 3, "bathrooms": 2, "deal_date": "2025-06-05"},
+        {"sido": "서울특별시", "district": "관악구", "title": "신림현대", "price_number": 42000, "area": "59.94", "floor": "7", "address": "신림동", "build_year": "1997", "land_share": "24.6", "rooms": 3, "bathrooms": 1, "deal_date": "2026-04-28"},
         # 동작구
-        {"sido": "서울특별시", "district": "동작구", "title": "상도래미안2차", "price_number": 58000, "area": "59.94", "floor": "16", "address": "상도동", "build_year": "2005", "land_share": "16.3", "rooms": 3, "bathrooms": 2},
-        {"sido": "서울특별시", "district": "동작구", "title": "대방삼성", "price_number": 50000, "area": "59.85", "floor": "9", "address": "대방동", "build_year": "2000", "land_share": "20.1", "rooms": 3, "bathrooms": 1},
+        {"sido": "서울특별시", "district": "동작구", "title": "상도래미안2차", "price_number": 58000, "area": "59.94", "floor": "16", "address": "상도동", "build_year": "2005", "land_share": "16.3", "rooms": 3, "bathrooms": 2, "deal_date": "2026-02-18"},
+        {"sido": "서울특별시", "district": "동작구", "title": "대방삼성", "price_number": 50000, "area": "59.85", "floor": "9", "address": "대방동", "build_year": "2000", "land_share": "20.1", "rooms": 3, "bathrooms": 1, "deal_date": "2025-11-20"},
         # 강서구
-        {"sido": "서울특별시", "district": "강서구", "title": "가양현대2차", "price_number": 45000, "area": "59.97", "floor": "10", "address": "가양동", "build_year": "1995", "land_share": "22.9", "rooms": 3, "bathrooms": 1},
-        {"sido": "서울특별시", "district": "강서구", "title": "등촌동부센트레빌", "price_number": 55000, "area": "59.97", "floor": "14", "address": "등촌동", "build_year": "2004", "land_share": "17.2", "rooms": 3, "bathrooms": 2},
-        {"sido": "서울특별시", "district": "강서구", "title": "화곡한강", "price_number": 38000, "area": "49.77", "floor": "5", "address": "화곡동", "build_year": "1993", "land_share": "26.4", "rooms": 2, "bathrooms": 1},
+        {"sido": "서울특별시", "district": "강서구", "title": "가양현대2차", "price_number": 45000, "area": "59.97", "floor": "10", "address": "가양동", "build_year": "1995", "land_share": "22.9", "rooms": 3, "bathrooms": 1, "deal_date": "2025-06-20"},
+        {"sido": "서울특별시", "district": "강서구", "title": "등촌동부센트레빌", "price_number": 55000, "area": "59.97", "floor": "14", "address": "등촌동", "build_year": "2004", "land_share": "17.2", "rooms": 3, "bathrooms": 2, "deal_date": "2025-12-15"},
+        {"sido": "서울특별시", "district": "강서구", "title": "화곡한강", "price_number": 38000, "area": "49.77", "floor": "5", "address": "화곡동", "build_year": "1993", "land_share": "26.4", "rooms": 2, "bathrooms": 1, "deal_date": "2026-03-18"},
         # 양천구
-        {"sido": "서울특별시", "district": "양천구", "title": "신월시영", "price_number": 33000, "area": "49.88", "floor": "4", "address": "신월동", "build_year": "1990", "land_share": "30.2", "rooms": 2, "bathrooms": 1},
+        {"sido": "서울특별시", "district": "양천구", "title": "신월시영", "price_number": 33000, "area": "49.88", "floor": "4", "address": "신월동", "build_year": "1990", "land_share": "30.2", "rooms": 2, "bathrooms": 1, "deal_date": "2025-08-05"},
         # 영등포구
-        {"sido": "서울특별시", "district": "영등포구", "title": "대림한신", "price_number": 42000, "area": "59.94", "floor": "8", "address": "대림동", "build_year": "1998", "land_share": "23.5", "rooms": 3, "bathrooms": 1},
-        {"sido": "서울특별시", "district": "영등포구", "title": "신길뉴타운래미안", "price_number": 58000, "area": "59.98", "floor": "15", "address": "신길동", "build_year": "2013", "land_share": "13.1", "rooms": 3, "bathrooms": 2},
+        {"sido": "서울특별시", "district": "영등포구", "title": "대림한신", "price_number": 42000, "area": "59.94", "floor": "8", "address": "대림동", "build_year": "1998", "land_share": "23.5", "rooms": 3, "bathrooms": 1, "deal_date": "2025-01-05"},
+        {"sido": "서울특별시", "district": "영등포구", "title": "신길뉴타운래미안", "price_number": 58000, "area": "59.98", "floor": "15", "address": "신길동", "build_year": "2013", "land_share": "13.1", "rooms": 3, "bathrooms": 2, "deal_date": "2025-05-05"},
         # 동대문구
-        {"sido": "서울특별시", "district": "동대문구", "title": "래미안위브", "price_number": 52000, "area": "59.97", "floor": "12", "address": "이문동", "build_year": "2010", "land_share": "15.4", "rooms": 3, "bathrooms": 2},
-        {"sido": "서울특별시", "district": "동대문구", "title": "전농현대", "price_number": 45000, "area": "59.94", "floor": "9", "address": "전농동", "build_year": "1999", "land_share": "21.7", "rooms": 3, "bathrooms": 1},
+        {"sido": "서울특별시", "district": "동대문구", "title": "래미안위브", "price_number": 52000, "area": "59.97", "floor": "12", "address": "이문동", "build_year": "2010", "land_share": "15.4", "rooms": 3, "bathrooms": 2, "deal_date": "2025-11-25"},
+        {"sido": "서울특별시", "district": "동대문구", "title": "전농현대", "price_number": 45000, "area": "59.94", "floor": "9", "address": "전농동", "build_year": "1999", "land_share": "21.7", "rooms": 3, "bathrooms": 1, "deal_date": "2025-09-20"},
         # 성북구
-        {"sido": "서울특별시", "district": "성북구", "title": "정릉래미안", "price_number": 48000, "area": "59.96", "floor": "14", "address": "정릉동", "build_year": "2007", "land_share": "16.5", "rooms": 3, "bathrooms": 2},
-        {"sido": "서울특별시", "district": "성북구", "title": "길음뉴타운래미안", "price_number": 57000, "area": "59.97", "floor": "18", "address": "길음동", "build_year": "2006", "land_share": "14.9", "rooms": 3, "bathrooms": 2},
+        {"sido": "서울특별시", "district": "성북구", "title": "정릉래미안", "price_number": 48000, "area": "59.96", "floor": "14", "address": "정릉동", "build_year": "2007", "land_share": "16.5", "rooms": 3, "bathrooms": 2, "deal_date": "2025-08-05"},
+        {"sido": "서울특별시", "district": "성북구", "title": "길음뉴타운래미안", "price_number": 57000, "area": "59.97", "floor": "18", "address": "길음동", "build_year": "2006", "land_share": "14.9", "rooms": 3, "bathrooms": 2, "deal_date": "2025-04-25"},
         # 종로구 / 중구 / 성동구 / 광진구 / 마포구 / 용산구
-        {"sido": "서울특별시", "district": "종로구", "title": "무악현대", "price_number": 52000, "area": "59.91", "floor": "8", "address": "무악동", "build_year": "1999", "land_share": "22.1", "rooms": 3, "bathrooms": 1},
-        {"sido": "서울특별시", "district": "중구", "title": "신당래미안", "price_number": 55000, "area": "59.94", "floor": "10", "address": "신당동", "build_year": "2004", "land_share": "15.7", "rooms": 3, "bathrooms": 2},
-        {"sido": "서울특별시", "district": "성동구", "title": "금호현대", "price_number": 55000, "area": "59.94", "floor": "11", "address": "금호동", "build_year": "2001", "land_share": "18.9", "rooms": 3, "bathrooms": 1},
-        {"sido": "서울특별시", "district": "광진구", "title": "중곡한양", "price_number": 50000, "area": "59.85", "floor": "7", "address": "중곡동", "build_year": "1996", "land_share": "25.8", "rooms": 3, "bathrooms": 1},
-        {"sido": "서울특별시", "district": "마포구", "title": "성산시영", "price_number": 55000, "area": "51.03", "floor": "4", "address": "성산동", "build_year": "1988", "land_share": "32.1", "rooms": 2, "bathrooms": 1},
-        {"sido": "서울특별시", "district": "용산구", "title": "이촌한가람", "price_number": 58000, "area": "49.77", "floor": "6", "address": "이촌동", "build_year": "1999", "land_share": "19.4", "rooms": 2, "bathrooms": 1},
+        {"sido": "서울특별시", "district": "종로구", "title": "무악현대", "price_number": 52000, "area": "59.91", "floor": "8", "address": "무악동", "build_year": "1999", "land_share": "22.1", "rooms": 3, "bathrooms": 1, "deal_date": "2025-06-15"},
+        {"sido": "서울특별시", "district": "중구", "title": "신당래미안", "price_number": 55000, "area": "59.94", "floor": "10", "address": "신당동", "build_year": "2004", "land_share": "15.7", "rooms": 3, "bathrooms": 2, "deal_date": "2025-09-20"},
+        {"sido": "서울특별시", "district": "성동구", "title": "금호현대", "price_number": 55000, "area": "59.94", "floor": "11", "address": "금호동", "build_year": "2001", "land_share": "18.9", "rooms": 3, "bathrooms": 1, "deal_date": "2025-03-20"},
+        {"sido": "서울특별시", "district": "광진구", "title": "중곡한양", "price_number": 50000, "area": "59.85", "floor": "7", "address": "중곡동", "build_year": "1996", "land_share": "25.8", "rooms": 3, "bathrooms": 1, "deal_date": "2025-03-10"},
+        {"sido": "서울특별시", "district": "마포구", "title": "성산시영", "price_number": 55000, "area": "51.03", "floor": "4", "address": "성산동", "build_year": "1988", "land_share": "32.1", "rooms": 2, "bathrooms": 1, "deal_date": "2025-10-20"},
+        {"sido": "서울특별시", "district": "용산구", "title": "이촌한가람", "price_number": 58000, "area": "49.77", "floor": "6", "address": "이촌동", "build_year": "1999", "land_share": "19.4", "rooms": 2, "bathrooms": 1, "deal_date": "2025-03-15"},
 
         # ===== 경기도 =====
         # 수원시
-        {"sido": "경기도", "district": "수원시장안구", "title": "천천현대", "price_number": 23000, "area": "59.97", "floor": "7", "address": "천천동", "build_year": "1996", "land_share": "26.8", "rooms": 3, "bathrooms": 1},
-        {"sido": "경기도", "district": "수원시권선구", "title": "권선자이e편한세상", "price_number": 42000, "area": "84.98", "floor": "12", "address": "권선동", "build_year": "2012", "land_share": "18.4", "rooms": 4, "bathrooms": 2},
-        {"sido": "경기도", "district": "수원시팔달구", "title": "매탄위브하늘채", "price_number": 48000, "area": "59.96", "floor": "15", "address": "매탄동", "build_year": "2010", "land_share": "14.2", "rooms": 3, "bathrooms": 2},
-        {"sido": "경기도", "district": "수원시영통구", "title": "영통아이파크", "price_number": 52000, "area": "84.92", "floor": "18", "address": "영통동", "build_year": "2008", "land_share": "16.7", "rooms": 4, "bathrooms": 2},
+        {"sido": "경기도", "district": "수원시장안구", "title": "천천현대", "price_number": 23000, "area": "59.97", "floor": "7", "address": "천천동", "build_year": "1996", "land_share": "26.8", "rooms": 3, "bathrooms": 1, "deal_date": "2025-10-05"},
+        {"sido": "경기도", "district": "수원시권선구", "title": "권선자이e편한세상", "price_number": 42000, "area": "84.98", "floor": "12", "address": "권선동", "build_year": "2012", "land_share": "18.4", "rooms": 4, "bathrooms": 2, "deal_date": "2025-09-25"},
+        {"sido": "경기도", "district": "수원시팔달구", "title": "매탄위브하늘채", "price_number": 48000, "area": "59.96", "floor": "15", "address": "매탄동", "build_year": "2010", "land_share": "14.2", "rooms": 3, "bathrooms": 2, "deal_date": "2026-03-28"},
+        {"sido": "경기도", "district": "수원시영통구", "title": "영통아이파크", "price_number": 52000, "area": "84.92", "floor": "18", "address": "영통동", "build_year": "2008", "land_share": "16.7", "rooms": 4, "bathrooms": 2, "deal_date": "2025-07-20"},
         # 성남시
-        {"sido": "경기도", "district": "성남시수정구", "title": "신흥주공2단지", "price_number": 30000, "area": "58.50", "floor": "5", "address": "신흥동", "build_year": "1985", "land_share": "35.2", "rooms": 3, "bathrooms": 1},
-        {"sido": "경기도", "district": "성남시중원구", "title": "금광동현대", "price_number": 38000, "area": "59.94", "floor": "10", "address": "금광동", "build_year": "1997", "land_share": "22.6", "rooms": 3, "bathrooms": 1},
+        {"sido": "경기도", "district": "성남시수정구", "title": "신흥주공2단지", "price_number": 30000, "area": "58.50", "floor": "5", "address": "신흥동", "build_year": "1985", "land_share": "35.2", "rooms": 3, "bathrooms": 1, "deal_date": "2025-02-05"},
+        {"sido": "경기도", "district": "성남시중원구", "title": "금광동현대", "price_number": 38000, "area": "59.94", "floor": "10", "address": "금광동", "build_year": "1997", "land_share": "22.6", "rooms": 3, "bathrooms": 1, "deal_date": "2025-12-20"},
         # 고양시
-        {"sido": "경기도", "district": "고양시덕양구", "title": "행신현대홈타운", "price_number": 35000, "area": "59.97", "floor": "8", "address": "행신동", "build_year": "2001", "land_share": "20.3", "rooms": 3, "bathrooms": 1},
-        {"sido": "경기도", "district": "고양시일산동구", "title": "마두한양", "price_number": 32000, "area": "57.67", "floor": "6", "address": "마두동", "build_year": "1994", "land_share": "28.5", "rooms": 3, "bathrooms": 1},
-        {"sido": "경기도", "district": "고양시일산서구", "title": "일산한화꿈에그린", "price_number": 38000, "area": "84.99", "floor": "14", "address": "대화동", "build_year": "2006", "land_share": "22.1", "rooms": 4, "bathrooms": 2},
+        {"sido": "경기도", "district": "고양시덕양구", "title": "행신현대홈타운", "price_number": 35000, "area": "59.97", "floor": "8", "address": "행신동", "build_year": "2001", "land_share": "20.3", "rooms": 3, "bathrooms": 1, "deal_date": "2026-02-12"},
+        {"sido": "경기도", "district": "고양시일산동구", "title": "마두한양", "price_number": 32000, "area": "57.67", "floor": "6", "address": "마두동", "build_year": "1994", "land_share": "28.5", "rooms": 3, "bathrooms": 1, "deal_date": "2025-04-05"},
+        {"sido": "경기도", "district": "고양시일산서구", "title": "일산한화꿈에그린", "price_number": 38000, "area": "84.99", "floor": "14", "address": "대화동", "build_year": "2006", "land_share": "22.1", "rooms": 4, "bathrooms": 2, "deal_date": "2025-10-20"},
         # 용인시
-        {"sido": "경기도", "district": "용인시기흥구", "title": "기흥역센트럴푸르지오", "price_number": 50000, "area": "84.96", "floor": "20", "address": "구갈동", "build_year": "2017", "land_share": "13.8", "rooms": 4, "bathrooms": 2},
-        {"sido": "경기도", "district": "용인시수지구", "title": "성복역롯데캐슬", "price_number": 58000, "area": "84.97", "floor": "22", "address": "성복동", "build_year": "2018", "land_share": "12.5", "rooms": 4, "bathrooms": 2},
-        {"sido": "경기도", "district": "용인시처인구", "title": "역북현대", "price_number": 22000, "area": "59.94", "floor": "7", "address": "역북동", "build_year": "2001", "land_share": "25.6", "rooms": 3, "bathrooms": 1},
+        {"sido": "경기도", "district": "용인시기흥구", "title": "기흥역센트럴푸르지오", "price_number": 50000, "area": "84.96", "floor": "20", "address": "구갈동", "build_year": "2017", "land_share": "13.8", "rooms": 4, "bathrooms": 2, "deal_date": "2025-03-05"},
+        {"sido": "경기도", "district": "용인시수지구", "title": "성복역롯데캐슬", "price_number": 58000, "area": "84.97", "floor": "22", "address": "성복동", "build_year": "2018", "land_share": "12.5", "rooms": 4, "bathrooms": 2, "deal_date": "2026-02-22"},
+        {"sido": "경기도", "district": "용인시처인구", "title": "역북현대", "price_number": 22000, "area": "59.94", "floor": "7", "address": "역북동", "build_year": "2001", "land_share": "25.6", "rooms": 3, "bathrooms": 1, "deal_date": "2025-08-15"},
         # 부천시
-        {"sido": "경기도", "district": "부천시", "title": "중동신시가지대우", "price_number": 35000, "area": "59.97", "floor": "10", "address": "중동", "build_year": "1993", "land_share": "21.8", "rooms": 3, "bathrooms": 1},
-        {"sido": "경기도", "district": "부천시", "title": "상동역푸르지오", "price_number": 48000, "area": "84.95", "floor": "15", "address": "상동", "build_year": "2004", "land_share": "16.3", "rooms": 4, "bathrooms": 2},
+        {"sido": "경기도", "district": "부천시", "title": "중동신시가지대우", "price_number": 35000, "area": "59.97", "floor": "10", "address": "중동", "build_year": "1993", "land_share": "21.8", "rooms": 3, "bathrooms": 1, "deal_date": "2026-04-12"},
+        {"sido": "경기도", "district": "부천시", "title": "상동역푸르지오", "price_number": 48000, "area": "84.95", "floor": "15", "address": "상동", "build_year": "2004", "land_share": "16.3", "rooms": 4, "bathrooms": 2, "deal_date": "2026-04-08"},
         # 안산시
-        {"sido": "경기도", "district": "안산시단원구", "title": "선부현대5차", "price_number": 20000, "area": "59.94", "floor": "8", "address": "선부동", "build_year": "1993", "land_share": "27.4", "rooms": 3, "bathrooms": 1},
-        {"sido": "경기도", "district": "안산시상록구", "title": "본오동현대", "price_number": 28000, "area": "59.97", "floor": "12", "address": "본오동", "build_year": "1997", "land_share": "23.1", "rooms": 3, "bathrooms": 1},
+        {"sido": "경기도", "district": "안산시단원구", "title": "선부현대5차", "price_number": 20000, "area": "59.94", "floor": "8", "address": "선부동", "build_year": "1993", "land_share": "27.4", "rooms": 3, "bathrooms": 1, "deal_date": "2025-10-10"},
+        {"sido": "경기도", "district": "안산시상록구", "title": "본오동현대", "price_number": 28000, "area": "59.97", "floor": "12", "address": "본오동", "build_year": "1997", "land_share": "23.1", "rooms": 3, "bathrooms": 1, "deal_date": "2026-03-08"},
         # 안양시
-        {"sido": "경기도", "district": "안양시동안구", "title": "평촌자이아이파크", "price_number": 55000, "area": "59.99", "floor": "18", "address": "호계동", "build_year": "2016", "land_share": "13.2", "rooms": 3, "bathrooms": 2},
-        {"sido": "경기도", "district": "안양시만안구", "title": "안양역푸르지오", "price_number": 42000, "area": "59.96", "floor": "14", "address": "안양동", "build_year": "2009", "land_share": "15.8", "rooms": 3, "bathrooms": 2},
+        {"sido": "경기도", "district": "안양시동안구", "title": "평촌자이아이파크", "price_number": 55000, "area": "59.99", "floor": "18", "address": "호계동", "build_year": "2016", "land_share": "13.2", "rooms": 3, "bathrooms": 2, "deal_date": "2025-05-25"},
+        {"sido": "경기도", "district": "안양시만안구", "title": "안양역푸르지오", "price_number": 42000, "area": "59.96", "floor": "14", "address": "안양동", "build_year": "2009", "land_share": "15.8", "rooms": 3, "bathrooms": 2, "deal_date": "2025-02-20"},
         # 남양주시
-        {"sido": "경기도", "district": "남양주시", "title": "다산신도시자연앤", "price_number": 45000, "area": "84.98", "floor": "16", "address": "다산동", "build_year": "2019", "land_share": "14.6", "rooms": 4, "bathrooms": 2},
-        {"sido": "경기도", "district": "남양주시", "title": "호평동일스위트", "price_number": 28000, "area": "59.94", "floor": "9", "address": "호평동", "build_year": "2005", "land_share": "20.3", "rooms": 3, "bathrooms": 1},
+        {"sido": "경기도", "district": "남양주시", "title": "다산신도시자연앤", "price_number": 45000, "area": "84.98", "floor": "16", "address": "다산동", "build_year": "2019", "land_share": "14.6", "rooms": 4, "bathrooms": 2, "deal_date": "2025-02-05"},
+        {"sido": "경기도", "district": "남양주시", "title": "호평동일스위트", "price_number": 28000, "area": "59.94", "floor": "9", "address": "호평동", "build_year": "2005", "land_share": "20.3", "rooms": 3, "bathrooms": 1, "deal_date": "2025-06-25"},
         # 화성시
-        {"sido": "경기도", "district": "화성시", "title": "동탄2신도시반도유보라", "price_number": 48000, "area": "84.97", "floor": "20", "address": "동탄동", "build_year": "2018", "land_share": "15.1", "rooms": 4, "bathrooms": 2},
-        {"sido": "경기도", "district": "화성시", "title": "병점역주공", "price_number": 25000, "area": "59.85", "floor": "7", "address": "병점동", "build_year": "2002", "land_share": "22.4", "rooms": 3, "bathrooms": 1},
+        {"sido": "경기도", "district": "화성시", "title": "동탄2신도시반도유보라", "price_number": 48000, "area": "84.97", "floor": "20", "address": "동탄동", "build_year": "2018", "land_share": "15.1", "rooms": 4, "bathrooms": 2, "deal_date": "2025-08-15"},
+        {"sido": "경기도", "district": "화성시", "title": "병점역주공", "price_number": 25000, "area": "59.85", "floor": "7", "address": "병점동", "build_year": "2002", "land_share": "22.4", "rooms": 3, "bathrooms": 1, "deal_date": "2025-03-05"},
         # 평택시
-        {"sido": "경기도", "district": "평택시", "title": "비전센트럴자이", "price_number": 35000, "area": "84.99", "floor": "14", "address": "비전동", "build_year": "2020", "land_share": "16.8", "rooms": 4, "bathrooms": 2},
-        {"sido": "경기도", "district": "평택시", "title": "평택소사벌한양수자인", "price_number": 28000, "area": "59.97", "floor": "10", "address": "소사벌", "build_year": "2012", "land_share": "18.5", "rooms": 3, "bathrooms": 1},
+        {"sido": "경기도", "district": "평택시", "title": "비전센트럴자이", "price_number": 35000, "area": "84.99", "floor": "14", "address": "비전동", "build_year": "2020", "land_share": "16.8", "rooms": 4, "bathrooms": 2, "deal_date": "2025-06-25"},
+        {"sido": "경기도", "district": "평택시", "title": "평택소사벌한양수자인", "price_number": 28000, "area": "59.97", "floor": "10", "address": "소사벌", "build_year": "2012", "land_share": "18.5", "rooms": 3, "bathrooms": 1, "deal_date": "2025-03-15"},
         # 의정부시
-        {"sido": "경기도", "district": "의정부시", "title": "민락동e편한세상", "price_number": 38000, "area": "84.96", "floor": "15", "address": "민락동", "build_year": "2013", "land_share": "17.2", "rooms": 4, "bathrooms": 2},
-        {"sido": "경기도", "district": "의정부시", "title": "의정부역우성", "price_number": 25000, "area": "59.94", "floor": "6", "address": "의정부동", "build_year": "1995", "land_share": "24.7", "rooms": 3, "bathrooms": 1},
+        {"sido": "경기도", "district": "의정부시", "title": "민락동e편한세상", "price_number": 38000, "area": "84.96", "floor": "15", "address": "민락동", "build_year": "2013", "land_share": "17.2", "rooms": 4, "bathrooms": 2, "deal_date": "2025-10-20"},
+        {"sido": "경기도", "district": "의정부시", "title": "의정부역우성", "price_number": 25000, "area": "59.94", "floor": "6", "address": "의정부동", "build_year": "1995", "land_share": "24.7", "rooms": 3, "bathrooms": 1, "deal_date": "2025-08-05"},
         # 시흥시
-        {"sido": "경기도", "district": "시흥시", "title": "배곧호반베르디움", "price_number": 48000, "area": "84.97", "floor": "18", "address": "배곧동", "build_year": "2017", "land_share": "14.9", "rooms": 4, "bathrooms": 2},
-        {"sido": "경기도", "district": "시흥시", "title": "장현지구디에트르", "price_number": 32000, "area": "59.99", "floor": "10", "address": "장현동", "build_year": "2020", "land_share": "16.3", "rooms": 3, "bathrooms": 2},
+        {"sido": "경기도", "district": "시흥시", "title": "배곧호반베르디움", "price_number": 48000, "area": "84.97", "floor": "18", "address": "배곧동", "build_year": "2017", "land_share": "14.9", "rooms": 4, "bathrooms": 2, "deal_date": "2025-12-20"},
+        {"sido": "경기도", "district": "시흥시", "title": "장현지구디에트르", "price_number": 32000, "area": "59.99", "floor": "10", "address": "장현동", "build_year": "2020", "land_share": "16.3", "rooms": 3, "bathrooms": 2, "deal_date": "2026-04-18"},
         # 파주시
-        {"sido": "경기도", "district": "파주시", "title": "운정신도시힐스테이트", "price_number": 42000, "area": "84.95", "floor": "14", "address": "야당동", "build_year": "2014", "land_share": "18.6", "rooms": 4, "bathrooms": 2},
-        {"sido": "경기도", "district": "파주시", "title": "금촌동부센트레빌", "price_number": 22000, "area": "59.97", "floor": "8", "address": "금촌동", "build_year": "2007", "land_share": "20.8", "rooms": 3, "bathrooms": 1},
+        {"sido": "경기도", "district": "파주시", "title": "운정신도시힐스테이트", "price_number": 42000, "area": "84.95", "floor": "14", "address": "야당동", "build_year": "2014", "land_share": "18.6", "rooms": 4, "bathrooms": 2, "deal_date": "2025-10-10"},
+        {"sido": "경기도", "district": "파주시", "title": "금촌동부센트레빌", "price_number": 22000, "area": "59.97", "floor": "8", "address": "금촌동", "build_year": "2007", "land_share": "20.8", "rooms": 3, "bathrooms": 1, "deal_date": "2025-05-05"},
         # 광명시
-        {"sido": "경기도", "district": "광명시", "title": "철산래미안자이", "price_number": 58000, "area": "59.98", "floor": "22", "address": "철산동", "build_year": "2017", "land_share": "12.1", "rooms": 3, "bathrooms": 2},
-        {"sido": "경기도", "district": "광명시", "title": "하안주공8단지", "price_number": 32000, "area": "49.86", "floor": "5", "address": "하안동", "build_year": "1992", "land_share": "28.4", "rooms": 2, "bathrooms": 1},
+        {"sido": "경기도", "district": "광명시", "title": "철산래미안자이", "price_number": 58000, "area": "59.98", "floor": "22", "address": "철산동", "build_year": "2017", "land_share": "12.1", "rooms": 3, "bathrooms": 2, "deal_date": "2025-10-15"},
+        {"sido": "경기도", "district": "광명시", "title": "하안주공8단지", "price_number": 32000, "area": "49.86", "floor": "5", "address": "하안동", "build_year": "1992", "land_share": "28.4", "rooms": 2, "bathrooms": 1, "deal_date": "2025-10-05"},
         # 김포시
-        {"sido": "경기도", "district": "김포시", "title": "한강메트로자이", "price_number": 40000, "area": "84.97", "floor": "16", "address": "구래동", "build_year": "2015", "land_share": "17.3", "rooms": 4, "bathrooms": 2},
-        {"sido": "경기도", "district": "김포시", "title": "장기동자연앤", "price_number": 30000, "area": "59.96", "floor": "10", "address": "장기동", "build_year": "2012", "land_share": "18.9", "rooms": 3, "bathrooms": 1},
+        {"sido": "경기도", "district": "김포시", "title": "한강메트로자이", "price_number": 40000, "area": "84.97", "floor": "16", "address": "구래동", "build_year": "2015", "land_share": "17.3", "rooms": 4, "bathrooms": 2, "deal_date": "2025-06-10"},
+        {"sido": "경기도", "district": "김포시", "title": "장기동자연앤", "price_number": 30000, "area": "59.96", "floor": "10", "address": "장기동", "build_year": "2012", "land_share": "18.9", "rooms": 3, "bathrooms": 1, "deal_date": "2025-07-25"},
         # 군포시
-        {"sido": "경기도", "district": "군포시", "title": "산본주공5단지", "price_number": 35000, "area": "59.97", "floor": "8", "address": "산본동", "build_year": "1992", "land_share": "25.3", "rooms": 3, "bathrooms": 1},
+        {"sido": "경기도", "district": "군포시", "title": "산본주공5단지", "price_number": 35000, "area": "59.97", "floor": "8", "address": "산본동", "build_year": "1992", "land_share": "25.3", "rooms": 3, "bathrooms": 1, "deal_date": "2026-04-22"},
         # 구리시
-        {"sido": "경기도", "district": "구리시", "title": "인창동현대", "price_number": 42000, "area": "59.94", "floor": "10", "address": "인창동", "build_year": "1997", "land_share": "21.6", "rooms": 3, "bathrooms": 1},
+        {"sido": "경기도", "district": "구리시", "title": "인창동현대", "price_number": 42000, "area": "59.94", "floor": "10", "address": "인창동", "build_year": "1997", "land_share": "21.6", "rooms": 3, "bathrooms": 1, "deal_date": "2025-02-25"},
         # 오산시
-        {"sido": "경기도", "district": "오산시", "title": "세교신도시호반베르디움", "price_number": 35000, "area": "84.99", "floor": "14", "address": "세교동", "build_year": "2019", "land_share": "16.7", "rooms": 4, "bathrooms": 2},
+        {"sido": "경기도", "district": "오산시", "title": "세교신도시호반베르디움", "price_number": 35000, "area": "84.99", "floor": "14", "address": "세교동", "build_year": "2019", "land_share": "16.7", "rooms": 4, "bathrooms": 2, "deal_date": "2026-03-28"},
         # 하남시
-        {"sido": "경기도", "district": "하남시", "title": "미사강변자연앤", "price_number": 55000, "area": "59.98", "floor": "18", "address": "망월동", "build_year": "2016", "land_share": "13.4", "rooms": 3, "bathrooms": 2},
+        {"sido": "경기도", "district": "하남시", "title": "미사강변자연앤", "price_number": 55000, "area": "59.98", "floor": "18", "address": "망월동", "build_year": "2016", "land_share": "13.4", "rooms": 3, "bathrooms": 2, "deal_date": "2026-04-18"},
         # 의왕시
-        {"sido": "경기도", "district": "의왕시", "title": "포일자이", "price_number": 50000, "area": "84.97", "floor": "16", "address": "포일동", "build_year": "2013", "land_share": "17.8", "rooms": 4, "bathrooms": 2},
+        {"sido": "경기도", "district": "의왕시", "title": "포일자이", "price_number": 50000, "area": "84.97", "floor": "16", "address": "포일동", "build_year": "2013", "land_share": "17.8", "rooms": 4, "bathrooms": 2, "deal_date": "2025-05-10"},
         # 동두천시
-        {"sido": "경기도", "district": "동두천시", "title": "지행역현대", "price_number": 12000, "area": "59.94", "floor": "6", "address": "지행동", "build_year": "2003", "land_share": "28.6", "rooms": 3, "bathrooms": 1},
+        {"sido": "경기도", "district": "동두천시", "title": "지행역현대", "price_number": 12000, "area": "59.94", "floor": "6", "address": "지행동", "build_year": "2003", "land_share": "28.6", "rooms": 3, "bathrooms": 1, "deal_date": "2026-02-12"},
         # 양주시
-        {"sido": "경기도", "district": "양주시", "title": "옥정신도시대방노블랜드", "price_number": 30000, "area": "84.96", "floor": "12", "address": "옥정동", "build_year": "2016", "land_share": "19.2", "rooms": 4, "bathrooms": 2},
+        {"sido": "경기도", "district": "양주시", "title": "옥정신도시대방노블랜드", "price_number": 30000, "area": "84.96", "floor": "12", "address": "옥정동", "build_year": "2016", "land_share": "19.2", "rooms": 4, "bathrooms": 2, "deal_date": "2025-07-10"},
         # 포천시
-        {"sido": "경기도", "district": "포천시", "title": "신읍동동양파라곤", "price_number": 15000, "area": "59.97", "floor": "8", "address": "신읍동", "build_year": "2010", "land_share": "22.4", "rooms": 3, "bathrooms": 1},
+        {"sido": "경기도", "district": "포천시", "title": "신읍동동양파라곤", "price_number": 15000, "area": "59.97", "floor": "8", "address": "신읍동", "build_year": "2010", "land_share": "22.4", "rooms": 3, "bathrooms": 1, "deal_date": "2025-05-05"},
         # 이천시
-        {"sido": "경기도", "district": "이천시", "title": "증포동부래미안", "price_number": 28000, "area": "84.98", "floor": "10", "address": "증포동", "build_year": "2009", "land_share": "20.6", "rooms": 4, "bathrooms": 2},
+        {"sido": "경기도", "district": "이천시", "title": "증포동부래미안", "price_number": 28000, "area": "84.98", "floor": "10", "address": "증포동", "build_year": "2009", "land_share": "20.6", "rooms": 4, "bathrooms": 2, "deal_date": "2025-12-25"},
         # 안성시
-        {"sido": "경기도", "district": "안성시", "title": "공도휴먼시아", "price_number": 18000, "area": "84.95", "floor": "12", "address": "공도읍", "build_year": "2011", "land_share": "22.8", "rooms": 4, "bathrooms": 2},
+        {"sido": "경기도", "district": "안성시", "title": "공도휴먼시아", "price_number": 18000, "area": "84.95", "floor": "12", "address": "공도읍", "build_year": "2011", "land_share": "22.8", "rooms": 4, "bathrooms": 2, "deal_date": "2025-10-20"},
     ]
 
     items = []
@@ -427,6 +428,7 @@ def generate_sample_data() -> list[dict]:
             "area": d.get("area", ""), "floor": d.get("floor", ""),
             "build_year": d.get("build_year", ""), "land_share": d.get("land_share", ""),
             "rooms": d.get("rooms", 0), "bathrooms": d.get("bathrooms", 0),
+            "deal_date": d.get("deal_date", ""),
             "address": d.get("address", ""), "source": "국토교통부 실거래가",
         })
 
